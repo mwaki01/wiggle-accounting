@@ -84,6 +84,17 @@ app.post('/api/expenses', async (req, res) => {
     }
 });
 
+// API ya kufuta takwimu zote mara moja
+app.delete('/api/reset-dashboard', async (req, res) => {
+    try {
+      await supabase.from('sales').delete().neq('id', 0);
+      await supabase.from('expenses').delete().neq('id', 0);
+      res.json({ message: 'Dashboard imesafishwa kikamilifu!' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
 // Washa Server
 app.listen(PORT, () => {
     console.log(`🚀 Wiggle Accounting Backend inaendesha kwenye: http://localhost:${PORT}`);
