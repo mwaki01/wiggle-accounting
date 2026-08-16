@@ -1,0 +1,18 @@
+{
+  "name": "wiggle-accounting",
+  "version": "1.0.0",
+  "description": "Mfumo wa usimamizi wa hesabu na fedha.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
