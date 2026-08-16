@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wiggle Accounting</title>
   <style>
+
+    /* Sehemu ya Navbar / Mobile Menu */
+.navbar-menu, .nav-links {
+  position: fixed;
+  top: 60px; /* urefu wa header yako */
+  left: 0;
+  width: 100%;
+  max-height: calc(100vh - 60px); /* inazuia menu kurefuka kuzidi kioo */
+  overflow-y: auto; /* inaruhusu menu kuscroll kama ni ndefu */
+  z-index: 999;
+}
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
     body { display: flex; background-color: #f4f6f9; color: #333; }
     
