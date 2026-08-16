@@ -28,7 +28,7 @@
       box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
 
-    /* Ukisogeza cursor (Hover), Sidebar inafunguka */
+    /* Ukisogeza cursor (Hover), Sidebar inafunguka desktop */
     .sidebar:hover {
       width: 250px;
     }
@@ -134,14 +134,36 @@
     th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
     th { background-color: #f8fafc; color: #475569; }
 
-    /* Responsive Design Kwa Simu */
+    /* --- RESPONSIVE DESIGN KWA SIMU (MENU HAINYONYI DASHBOARD) --- */
     @media (max-width: 768px) {
-      body { flex-direction: column; }
-      .sidebar { width: 100%; height: auto; position: relative; }
-      .sidebar:hover { width: 100%; }
-      .sidebar ul li a span { opacity: 1; }
-      .brand-box h2 { opacity: 1; }
-      .main-content { margin-left: 0; width: 100%; padding: 15px; }
+      body { 
+        flex-direction: column !important; 
+      }
+
+      .sidebar { 
+        position: relative !important; 
+        width: 100% !important; 
+        height: auto !important; 
+        max-height: 250px;
+        overflow-y: auto !important; /* Inaruhusu kuscroll menu kama ni ndefu */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 15px; /* Inasukuma dashboard chini */
+      }
+
+      .sidebar:hover { 
+        width: 100% !important; 
+      }
+
+      .sidebar ul li a span, 
+      .brand-box h2 { 
+        opacity: 1 !important; 
+      }
+
+      .main-content { 
+        margin-left: 0 !important; 
+        width: 100% !important; 
+        padding: 15px !important; 
+      }
     }
   </style>
 </head>
