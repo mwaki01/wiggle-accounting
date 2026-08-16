@@ -12,7 +12,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
     body { display: flex; background-color: #f4f6f9; color: #333; min-height: 100vh; overflow-x: hidden; }
 
-    /* --- SIDEBAR STYLE (KAMA SUPABASE) --- */
+    /* --- SIDEBAR STYLE (DESKTOP) --- */
     .sidebar {
       position: fixed;
       top: 0;
@@ -28,9 +28,15 @@
       box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
 
-    /* Ukisogeza cursor (Hover), Sidebar inafunguka desktop */
-    .sidebar:hover {
-      width: 250px;
+    /* Hover effect desktop tu */
+    @media (min-width: 769px) {
+      .sidebar:hover {
+        width: 250px;
+      }
+      .sidebar:hover .brand-box h2,
+      .sidebar:hover ul li a span {
+        opacity: 1;
+      }
     }
 
     /* Branding / Logo Box */
@@ -56,10 +62,6 @@
       text-transform: uppercase;
       opacity: 0;
       transition: opacity 0.2s ease-in-out;
-    }
-
-    .sidebar:hover .brand-box h2 {
-      opacity: 1;
     }
 
     /* Menu Links */
@@ -89,10 +91,6 @@
       transition: opacity 0.2s ease-in-out;
     }
 
-    .sidebar:hover ul li a span {
-      opacity: 1;
-    }
-
     .sidebar ul li a:hover, .sidebar ul li a.active {
       background: #0f172a;
       color: #fff;
@@ -112,7 +110,7 @@
     .role-badge { background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; }
 
     /* Cards Grid */
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; margin-bottom: 25px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 25px; }
     .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     .card h4 { color: #64748b; font-size: 13px; margin-bottom: 8px; text-transform: uppercase; }
     .card p { font-size: 20px; font-weight: bold; color: #0f172a; }
@@ -134,35 +132,66 @@
     th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
     th { background-color: #f8fafc; color: #475569; }
 
-    /* --- RESPONSIVE DESIGN KWA SIMU (MENU HAINYONYI DASHBOARD) --- */
+    /* --- LAYOUT BORA KWA AJILI YA SIMU (MOBILE OPTIMIZED) --- */
     @media (max-width: 768px) {
-      body { 
-        flex-direction: column !important; 
+      body {
+        flex-direction: column;
       }
 
-      .sidebar { 
-        position: relative !important; 
-        width: 100% !important; 
-        height: auto !important; 
-        max-height: 250px;
-        overflow-y: auto !important; /* Inaruhusu kuscroll menu kama ni ndefu */
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 15px; /* Inasukuma dashboard chini */
+      .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        box-shadow: none;
       }
 
-      .sidebar:hover { 
-        width: 100% !important; 
+      .brand-box {
+        justify-content: flex-start;
       }
 
-      .sidebar ul li a span, 
-      .brand-box h2 { 
-        opacity: 1 !important; 
+      .brand-box h2 {
+        opacity: 1;
       }
 
-      .main-content { 
-        margin-left: 0 !important; 
-        width: 100% !important; 
-        padding: 15px !important; 
+      /* On Mobile: Menus slide horizontally for quick access without taking vertical space */
+      .sidebar ul {
+        display: flex;
+        overflow-x: auto;
+        padding: 5px 0;
+        white-space: nowrap;
+        background: #0f172a;
+      }
+
+      .sidebar ul li a {
+        padding: 10px 15px;
+        font-size: 13px;
+        border-left: none !important;
+        border-bottom: 3px solid transparent;
+      }
+
+      .sidebar ul li a span {
+        opacity: 1;
+      }
+
+      .sidebar ul li a:hover, .sidebar ul li a.active {
+        border-bottom: 3px solid #38bdf8;
+      }
+
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 15px;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
       }
     }
   </style>
@@ -176,16 +205,16 @@
       <h2>WIGGLE</h2>
     </div>
     <ul>
-      <li><a onclick="showSection('dashboard', event)" class="nav-link active"><i class="bi bi-speedometer2"></i> <span>1. Dashboard</span></a></li>
-      <li><a onclick="showSection('sales', event)" class="nav-link"><i class="bi bi-cart"></i> <span>2. Sales</span></a></li>
-      <li><a onclick="showSection('expenses', event)" class="nav-link"><i class="bi bi-wallet2"></i> <span>3. Expenses</span></a></li>
-      <li><a onclick="showSection('inventory', event)" class="nav-link"><i class="bi bi-box-seam"></i> <span>4. Inventory</span></a></li>
-      <li><a onclick="showSection('customers', event)" class="nav-link"><i class="bi bi-people"></i> <span>5. Customers</span></a></li>
-      <li><a onclick="showSection('suppliers', event)" class="nav-link"><i class="bi bi-truck"></i> <span>6. Suppliers</span></a></li>
-      <li><a onclick="showSection('banking', event)" class="nav-link"><i class="bi bi-bank"></i> <span>7. Banking</span></a></li>
-      <li><a onclick="showSection('reports', event)" class="nav-link"><i class="bi bi-file-earmark-bar-graph"></i> <span>8. Reports</span></a></li>
-      <li><a onclick="showSection('users', event)" class="nav-link"><i class="bi bi-person-gear"></i> <span>9. Multi-user</span></a></li>
-      <li><a onclick="showSection('backup', event)" class="nav-link"><i class="bi bi-cloud-arrow-up"></i> <span>10. Backup</span></a></li>
+      <li><a onclick="showSection('dashboard', event)" class="nav-link active"><i class="bi bi-speedometer2"></i> <span>Dashboard</span></a></li>
+      <li><a onclick="showSection('sales', event)" class="nav-link"><i class="bi bi-cart"></i> <span>Sales</span></a></li>
+      <li><a onclick="showSection('expenses', event)" class="nav-link"><i class="bi bi-wallet2"></i> <span>Expenses</span></a></li>
+      <li><a onclick="showSection('inventory', event)" class="nav-link"><i class="bi bi-box-seam"></i> <span>Inventory</span></a></li>
+      <li><a onclick="showSection('customers', event)" class="nav-link"><i class="bi bi-people"></i> <span>Customers</span></a></li>
+      <li><a onclick="showSection('suppliers', event)" class="nav-link"><i class="bi bi-truck"></i> <span>Suppliers</span></a></li>
+      <li><a onclick="showSection('banking', event)" class="nav-link"><i class="bi bi-bank"></i> <span>Banking</span></a></li>
+      <li><a onclick="showSection('reports', event)" class="nav-link"><i class="bi bi-file-earmark-bar-graph"></i> <span>Reports</span></a></li>
+      <li><a onclick="showSection('users', event)" class="nav-link"><i class="bi bi-person-gear"></i> <span>Users</span></a></li>
+      <li><a onclick="showSection('backup', event)" class="nav-link"><i class="bi bi-cloud-arrow-up"></i> <span>Backup</span></a></li>
     </ul>
   </div>
 
