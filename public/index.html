@@ -1,10 +1,31 @@
 <!DOCTYPE html>
 <html lang="sw">
+  <img src="/logo.png" alt="Wiggle Logo" style="height: 40px;">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wiggle Accounting</title>
   <style>
+/* Inaruhusu ukurasa wote kuscroll vizuri */
+body {
+  overflow-y: auto !important;
+}
+
+/* Kwenye vioo vidogo vya simu (Responsive Layout) */
+@media (max-width: 768px) {
+  .sidebar, sidebar, nav, #sidebar {
+    position: relative !important; /* Inaondoa kuganda kwa menu */
+    width: 100% !important;
+    height: auto !important;
+    max-height: 250px;
+    overflow-y: auto !important; /* Inaruhusu menu kuscroll yenyewe */
+  }
+
+  .main-content, main, .content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
 
     /* Sehemu ya Navbar / Mobile Menu */
 .navbar-menu, .nav-links {
