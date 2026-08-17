@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// REKEBISHO 1: Ruhusu express isome mafaili ya static kutoka folder kuu (root) badala ya public
+// Serving static files kutoka root directory
 app.use(express.static(path.join(__dirname)));
 
 // Connection ya PostgreSQL Database
@@ -16,63 +16,72 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-// REKEBISHO 2: Tengeneza Tables zote zinazotakiwa zikiwemo Customers & Suppliers
+pool.on('error', (err) => {
+  console.error('PostgreSQL Connection Error:', err.message);
+});
+
+// Kutengeneza Tables (Kama hazijaundwa)
 const initDb = async () => {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS products (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(100) NOT NULL,
-      quantity INT NOT NULL DEFAULT 0,
-      unit_price NUMERIC(10,2) NOT NULL,
-      min_stock_alert INT DEFAULT 5
-    );
+  if (!process.env.DATABASE_URL) return;
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS products (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        quantity INT NOT NULL DEFAULT 0,
+        unit_price NUMERIC(10,2) NOT NULL,
+        min_stock_alert INT DEFAULT 5
+      );
 
-    CREATE TABLE IF NOT EXISTS sales (
-      id SERIAL PRIMARY KEY,
-      item_name VARCHAR(100),
-      quantity INT DEFAULT 1,
-      unit_price NUMERIC(10,2) DEFAULT 0,
-      total_amount NUMERIC(10,2) NOT NULL,
-      payment_status VARCHAR(20) DEFAULT 'Paid',
-      payment_method VARCHAR(20) DEFAULT 'Cash',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+      CREATE TABLE IF NOT EXISTS sales (
+        id SERIAL PRIMARY KEY,
+        item_name VARCHAR(100),
+        quantity INT DEFAULT 1,
+        unit_price NUMERIC(10,2) DEFAULT 0,
+        total_amount NUMERIC(10,2) NOT NULL,
+        payment_status VARCHAR(20) DEFAULT 'Paid',
+        payment_method VARCHAR(20) DEFAULT 'Cash',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
 
-    CREATE TABLE IF NOT EXISTS expenses (
-      id SERIAL PRIMARY KEY,
-      category VARCHAR(50) NOT NULL,
-      amount NUMERIC(10,2) NOT NULL,
-      paid_from VARCHAR(20) DEFAULT 'Cash',
-      notes TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+      CREATE TABLE IF NOT EXISTS expenses (
+        id SERIAL PRIMARY KEY,
+        category VARCHAR(50) NOT NULL,
+        amount NUMERIC(10,2) NOT NULL,
+        paid_from VARCHAR(20) DEFAULT 'Cash',
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
 
-    CREATE TABLE IF NOT EXISTS customers (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(100) NOT NULL,
-      outstanding_balance NUMERIC(10,2) DEFAULT 0
-    );
+      CREATE TABLE IF NOT EXISTS customers (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        outstanding_balance NUMERIC(10,2) DEFAULT 0
+      );
 
-    CREATE TABLE IF NOT EXISTS suppliers (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(100) NOT NULL,
-      balance_due NUMERIC(10,2) DEFAULT 0
-    );
-  `);
+      CREATE TABLE IF NOT EXISTS suppliers (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        balance_due NUMERIC(10,2) DEFAULT 0
+      );
+    `);
+  } catch (err) {
+    console.error("Db Init Error:", err.message);
+  }
 };
-initDb().catch(console.error);
+initDb();
 
-// REKEBISHO 3: Root Endpoint ya kufungua index.html (Inatibu Not Found)
+// Home route - Inafungua index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// ---------------- PRODUCTS / INVENTORY ROUTES ----------------
+// ---------------- PRODUCTS / INVENTORY ----------------
 app.get('/api/products', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM products ORDER BY id ASC');
     res.json(rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { res.status(500).json([]); }
 });
 
 app.post('/api/products', async (req, res) => {
@@ -110,12 +119,12 @@ app.post('/api/products/:id/stockout', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ---------------- SALES ROUTES ----------------
+// ---------------- SALES ----------------
 app.get('/api/sales', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM sales ORDER BY id DESC');
     res.json(rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { res.status(500).json([]); }
 });
 
 app.post('/api/sales', async (req, res) => {
@@ -135,18 +144,17 @@ app.post('/api/sales', async (req, res) => {
 
 app.delete('/api/sales/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    await pool.query('DELETE FROM sales WHERE id = $1', [id]);
-    res.json({ message: "Mauzo yamefutwa" });
+    await pool.query('DELETE FROM sales WHERE id = $1', [req.params.id]);
+    res.json({ message: "Sales record deleted" });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ---------------- EXPENSES ROUTES ----------------
+// ---------------- EXPENSES ----------------
 app.get('/api/expenses', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM expenses ORDER BY id DESC');
     res.json(rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { res.status(500).json([]); }
 });
 
 app.post('/api/expenses', async (req, res) => {
@@ -160,22 +168,22 @@ app.post('/api/expenses', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ---------------- CUSTOMERS & SUPPLIERS ROUTES ----------------
+// ---------------- CUSTOMERS & SUPPLIERS ----------------
 app.get('/api/customers', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM customers ORDER BY id ASC');
     res.json(rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { res.status(500).json([]); }
 });
 
 app.get('/api/suppliers', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM suppliers ORDER BY id ASC');
     res.json(rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { res.status(500).json([]); }
 });
 
-// ---------------- REPORTS API ----------------
+// ---------------- REPORTS ----------------
 app.get('/api/reports/profit-loss', async (req, res) => {
   try {
     const { rows: salesRows } = await pool.query('SELECT total_amount FROM sales');
@@ -184,12 +192,8 @@ app.get('/api/reports/profit-loss', async (req, res) => {
     const totalSales = salesRows.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
     const totalExpenses = expRows.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
-    res.json({
-      totalSales,
-      totalExpenses,
-      netProfit: totalSales - totalExpenses
-    });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+    res.json({ totalSales, totalExpenses, netProfit: totalSales - totalExpenses });
+  } catch (err) { res.status(500).json({ totalSales: 0, totalExpenses: 0, netProfit: 0 }); }
 });
 
 app.get('/api/reports/balance-sheet', async (req, res) => {
@@ -227,7 +231,7 @@ app.get('/api/reports/balance-sheet', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Wildcard Route - Inarudisha index.html kwa Njia Zote Zingine
+// Fallback Route
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
