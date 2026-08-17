@@ -7,8 +7,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serving static files (index.html, css, js) kutoka root folder
-app.use(express.static(path.join(__dirname)));
+// REKEBISHO: Soma static files kutoka kwenye folder la 'public'
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Connection ya PostgreSQL Database
 const pool = new Pool({
@@ -20,7 +20,7 @@ pool.on('error', (err) => {
   console.error('PostgreSQL Connection Error:', err.message);
 });
 
-// Kutengeneza Tables (Kama hazijaundwa)
+// Kutengeneza Tables
 const initDb = async () => {
   if (!process.env.DATABASE_URL) return;
   try {
@@ -71,12 +71,12 @@ const initDb = async () => {
 };
 initDb();
 
-// Main Route - Inafungua index.html
+// Main Route - Inafungua public/index.html
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ---------------- PRODUCTS / INVENTORY ----------------
+// ---------------- PRODUCTS ----------------
 app.get('/api/products', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM products ORDER BY id ASC');
@@ -90,30 +90,6 @@ app.post('/api/products', async (req, res) => {
     const { rows } = await pool.query(
       'INSERT INTO products (name, quantity, unit_price, min_stock_alert) VALUES ($1, $2, $3, $4) RETURNING *',
       [name, quantity, unit_price, min_stock_alert || 5]
-    );
-    res.json(rows[0]);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/products/:id/purchase', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { quantity } = req.body;
-    const { rows } = await pool.query(
-      'UPDATE products SET quantity = quantity + $1 WHERE id = $2 RETURNING *',
-      [quantity, id]
-    );
-    res.json(rows[0]);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/products/:id/stockout', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { quantity } = req.body;
-    const { rows } = await pool.query(
-      'UPDATE products SET quantity = GREATEST(0, quantity - $1) WHERE id = $2 RETURNING *',
-      [quantity, id]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -196,44 +172,9 @@ app.get('/api/reports/profit-loss', async (req, res) => {
   } catch (err) { res.status(500).json({ totalSales: 0, totalExpenses: 0, netProfit: 0 }); }
 });
 
-app.get('/api/reports/balance-sheet', async (req, res) => {
-  try {
-    const { rows: products } = await pool.query('SELECT quantity, unit_price FROM products');
-    const inventoryValue = products.reduce((sum, p) => sum + (Number(p.quantity) * Number(p.unit_price)), 0);
-
-    const { rows: sales } = await pool.query('SELECT total_amount, payment_status, payment_method FROM sales');
-    let cashOnHand = 0, bankBalance = 0, accountsReceivable = 0;
-
-    sales.forEach(s => {
-      const amt = Number(s.total_amount);
-      if (s.payment_status === 'Paid') {
-        if (s.payment_method === 'Bank') bankBalance += amt;
-        else cashOnHand += amt;
-      } else accountsReceivable += amt;
-    });
-
-    const { rows: expenses } = await pool.query('SELECT amount, paid_from FROM expenses');
-    expenses.forEach(e => {
-      const amt = Number(e.amount);
-      if (e.paid_from === 'Bank') bankBalance -= amt;
-      else cashOnHand -= amt;
-    });
-
-    const totalAssets = cashOnHand + bankBalance + inventoryValue + accountsReceivable;
-    const totalLiabilities = 0;
-    const capital = totalAssets - totalLiabilities;
-
-    res.json({
-      assets: { cash: cashOnHand, bank: bankBalance, inventory: inventoryValue, receivables: accountsReceivable, totalAssets },
-      liabilities: { payables: totalLiabilities, totalLiabilities },
-      equity: { capital, totalEquity: capital }
-    });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Middleware Fallback (Kushughulikia njia zote za HTML)
+// Middleware Fallback (Inarudisha public/index.html)
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 5000;
