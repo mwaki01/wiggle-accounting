@@ -74,7 +74,7 @@
     @media print {
       body * { visibility: hidden; }
       #printableReceipt, #printableReceipt * { visibility: visible; }
-      #printableReceipt { position: absolute; left: 0; top: 0; width: 100%; }
+      #printableReceipt { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
     }
   </style>
 </head>
@@ -126,7 +126,13 @@
             <div class="form-group"><label>Quantity (Chupa)</label><input type="number" id="quantity" min="1" placeholder="Idadi ya chupa" required></div>
             <div class="form-group"><label>Unit Price (Bei ya Chupa)</label><input type="number" id="unit_price" placeholder="Bei kwa chupa" required></div>
             <div class="form-group"><label>Customer Name</label><input type="text" id="cust_name" placeholder="Juma Hamisi"></div>
-            <div class="form-group"><label>Payment Status</label><select id="payment_status"><option>Paid</option><option>Credit</option></select></div>
+            <div class="form-group">
+              <label>Payment Status</label>
+              <select id="payment_status">
+                <option value="Paid">Paid</option>
+                <option value="Credit">Credit (Deni)</option>
+              </select>
+            </div>
           </div>
           <button type="submit" class="btn">Save & Print Receipt</button>
         </form>
@@ -138,14 +144,16 @@
           <thead>
             <tr>
               <th>Bidhaa</th>
-              <th>Idadi (Chupa)</th>
-              <th>Bei ya Chupa</th>
+              <th>Idadi</th>
+              <th>Bei</th>
+              <th>Mteja</th>
+              <th>Hali</th>
               <th>Jumla (TZS)</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody id="sales-table-body">
-            <tr><td colspan="5">Inapakia mauzo...</td></tr>
+            <tr><td colspan="7">Inapakia mauzo...</td></tr>
           </tbody>
         </table>
       </div>
@@ -194,7 +202,7 @@
       </div>
 
       <div class="form-container">
-        <h3>2. Record Purchase (Stock In)</h3>
+        <h3>2. Record Purchase (Stock In / Mzigo Mpya)</h3>
         <form id="purchase-form">
           <div class="form-grid">
             <div class="form-group">
@@ -202,8 +210,10 @@
               <select id="purchase_prod_id" required></select>
             </div>
             <div class="form-group"><label>Quantity Added</label><input type="number" id="purchase_qty" min="1" required></div>
+            <div class="form-group"><label>Unit Cost (Gharama kwa Kipengele)</label><input type="number" id="purchase_cost" placeholder="0"></div>
+            <div class="form-group"><label>Supplier Name (Muuzaji)</label><input type="text" id="purchase_supplier" placeholder="Jina la Muuzaji"></div>
           </div>
-          <button type="submit" class="btn btn-green">Add Stock</button>
+          <button type="submit" class="btn btn-green">Add Stock & Record Purchase</button>
         </form>
       </div>
 
@@ -230,7 +240,7 @@
       </div>
 
       <div class="table-container">
-        <h3>Customer List & Outstanding Balances</h3>
+        <h3>Customer List & Outstanding Balances (Wateja Wanaodaiwa)</h3>
         <table>
           <thead><tr><th>ID</th><th>Customer Name</th><th>Outstanding Debt (Deni)</th></tr></thead>
           <tbody id="customers-table-body">
@@ -254,7 +264,7 @@
       </div>
 
       <div class="table-container">
-        <h3>Supplier List & Payables</h3>
+        <h3>Supplier List & Payables (Wauzaji Wanaoikopesha Biashara)</h3>
         <table>
           <thead><tr><th>ID</th><th>Supplier Name</th><th>Balance Due (Salio la Kulipwa)</th></tr></thead>
           <tbody id="suppliers-table-body">
@@ -307,7 +317,6 @@
               <h4 style="color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 5px;">1. ASSETS (Rasilimali)</h4>
               <table style="width:100%; margin-top:10px;">
                 <tr><td>Cash on Hand</td><td id="bs-cash">TZS 0</td></tr>
-                <tr><td>Bank Balance</td><td id="bs-bank">TZS 0</td></tr>
                 <tr><td>Inventory Value (Stoo)</td><td id="bs-inventory">TZS 0</td></tr>
                 <tr><td>Accounts Receivable (Wateja)</td><td id="bs-receivables">TZS 0</td></tr>
                 <tr style="font-weight: bold; background: #e0f2fe;"><td>TOTAL ASSETS</td><td id="bs-total-assets">TZS 0</td></tr>
@@ -323,6 +332,7 @@
 
               <h4 style="color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 5px; margin-top: 20px;">3. EQUITY / CAPITAL (Mtaji & Faida)</h4>
               <table style="width:100%; margin-top:10px;">
+                <tr><td>Initial Capital (Mtaji Wa Awali)</td><td id="bs-capital">TZS 0</td></tr>
                 <tr><td>Retained Earnings (Faida)</td><td id="bs-retained">TZS 0</td></tr>
                 <tr style="font-weight: bold; background: #d1fae5;"><td>TOTAL EQUITY & LIABILITIES</td><td id="bs-total-equity">TZS 0</td></tr>
               </table>
@@ -374,6 +384,7 @@
     <p><strong>Price per unit:</strong> TZS <span id="rec-price"></span></p>
     <p><strong>Total Amount:</strong> TZS <span id="rec-total"></span></p>
     <p><strong>Customer:</strong> <span id="rec-customer"></span></p>
+    <p><strong>Status:</strong> <span id="rec-status"></span></p>
     <hr>
     <p style="text-align:center;">Asante kwa kufanya biashara nasi!</p>
   </div>
@@ -443,15 +454,19 @@
       } catch (err) { console.error(err); }
     }
 
-    document.getElementById('customer-form').onsubmit = async (e) => {
+    document.getElementById('customer-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const body = {
         name: document.getElementById('cust_add_name').value,
         outstanding_balance: document.getElementById('cust_add_balance').value
       };
       const res = await fetch('/api/customers', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-      if(res.ok) { document.getElementById('customer-form').reset(); loadCustomers(); }
-    };
+      if(res.ok) { 
+        document.getElementById('customer-form').reset(); 
+        await loadCustomers(); 
+        alert('Mteja amehifadhiwa kikamilifu!');
+      }
+    });
 
     // SUPPLIERS
     async function loadSuppliers() {
@@ -470,15 +485,19 @@
       } catch (err) { console.error(err); }
     }
 
-    document.getElementById('supplier-form').onsubmit = async (e) => {
+    document.getElementById('supplier-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const body = {
         name: document.getElementById('supp_add_name').value,
         balance_due: document.getElementById('supp_add_balance').value
       };
       const res = await fetch('/api/suppliers', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-      if(res.ok) { document.getElementById('supplier-form').reset(); loadSuppliers(); }
-    };
+      if(res.ok) { 
+        document.getElementById('supplier-form').reset(); 
+        await loadSuppliers(); 
+        alert('Muuzaji amehifadhiwa kikamilifu!');
+      }
+    });
 
     // SALES
     async function loadSales() {
@@ -494,12 +513,14 @@
                 <td>${s.item_name || 'Bidhaa'}</td>
                 <td>${s.quantity || 1}</td>
                 <td>TZS ${Number(s.unit_price || 0).toLocaleString()}</td>
-                <td><strong>TZS ${Number(s.total || s.total_amount || 0).toLocaleString()}</strong></td>
+                <td>${s.customer_name || 'Mteja wa Kawaida'}</td>
+                <td><span style="color: ${s.payment_status === 'Credit' ? 'red' : 'green'}; font-weight: bold;">${s.payment_status || 'Paid'}</span></td>
+                <td><strong>TZS ${Number(s.total_amount || 0).toLocaleString()}</strong></td>
                 <td><button class="btn btn-red" style="margin:0; padding:4px 8px;" onclick="deleteSale(${s.id})">Futa</button></td>
               </tr>`;
           });
         } else {
-          tbody.innerHTML = '<tr><td colspan="5">Hakuna mauzo yaliyorekodiwa.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7">Hakuna mauzo yaliyorekodiwa.</td></tr>';
         }
       } catch (err) { console.error(err); }
     }
@@ -510,21 +531,41 @@
       const qty = document.getElementById('quantity').value;
       const price = document.getElementById('unit_price').value;
       const cust = document.getElementById('cust_name').value || 'Mteja wa Kawaida';
+      const status = document.getElementById('payment_status').value;
 
-      const body = { item_name: item, quantity: qty, unit_price: price };
-      const res = await fetch('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      
-      if(res.ok) {
-        document.getElementById('rec-item').innerText = item;
-        document.getElementById('rec-qty').innerText = qty;
-        document.getElementById('rec-price').innerText = Number(price).toLocaleString();
-        document.getElementById('rec-total').innerText = (Number(qty) * Number(price)).toLocaleString();
-        document.getElementById('rec-customer').innerText = cust;
+      const body = { 
+        item_name: item, 
+        quantity: qty, 
+        unit_price: price, 
+        customer_name: cust, 
+        payment_status: status 
+      };
+
+      try {
+        const res = await fetch('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         
-        window.print();
-        document.getElementById('sales-form').reset();
-        loadSales();
-        loadDashboard();
+        if(res.ok) {
+          // Refresh UI
+          await loadSales();
+          await loadCustomers();
+          await loadDashboard();
+
+          // Prepare receipt data
+          document.getElementById('rec-item').innerText = item;
+          document.getElementById('rec-qty').innerText = qty;
+          document.getElementById('rec-price').innerText = Number(price).toLocaleString();
+          document.getElementById('rec-total').innerText = (Number(qty) * Number(price)).toLocaleString();
+          document.getElementById('rec-customer').innerText = cust;
+          document.getElementById('rec-status').innerText = status;
+          
+          // Trigger Print safely
+          setTimeout(() => {
+            window.print();
+            document.getElementById('sales-form').reset();
+          }, 300);
+        }
+      } catch (err) {
+        alert('Imeshindwa kuhifadhi mauzo: ' + err.message);
       }
     });
 
@@ -594,8 +635,20 @@
       e.preventDefault();
       const id = document.getElementById('purchase_prod_id').value;
       const qty = document.getElementById('purchase_qty').value;
-      const res = await fetch(`/api/products/${id}/purchase`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity: qty }) });
-      if(res.ok) { document.getElementById('purchase-form').reset(); loadProducts(); }
+      const cost = document.getElementById('purchase_cost').value;
+      const supplier = document.getElementById('purchase_supplier').value;
+
+      const res = await fetch(`/api/products/${id}/purchase`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ quantity: qty, unit_cost: cost, supplier_name: supplier }) 
+      });
+      if(res.ok) { 
+        document.getElementById('purchase-form').reset(); 
+        await loadProducts(); 
+        await loadSuppliers(); 
+        alert('Mzigo umeongezwa kikamilifu!');
+      }
     });
 
     async function editProduct(id, oldQty, oldPrice) {
@@ -634,7 +687,7 @@
         ]);
 
         const invVal = Array.isArray(p) ? p.reduce((a,b)=>a+(Number(b.quantity)*Number(b.unit_price)), 0) : 0;
-        const salesVal = Array.isArray(s) ? s.reduce((a,b)=>a+Number(b.total || b.total_amount || 0), 0) : 0;
+        const salesVal = Array.isArray(s) ? s.reduce((a,b)=>a+Number(b.total_amount || 0), 0) : 0;
         const expVal = Array.isArray(e) ? e.reduce((a,b)=>a+Number(b.amount||0), 0) : 0;
         const custVal = Array.isArray(c) ? c.reduce((a,b)=>a+Number(b.outstanding_balance||0), 0) : 0;
         const suppVal = Array.isArray(sup) ? sup.reduce((a,b)=>a+Number(b.balance_due||0), 0) : 0;
@@ -642,6 +695,7 @@
         const netCash = salesVal - expVal;
         const totalAssets = netCash + invVal + custVal;
         const retained = salesVal - expVal;
+        const initialCapital = totalAssets - retained - suppVal;
 
         document.getElementById('balance-sheet-container').style.display = 'block';
         document.getElementById('bs-cash').innerText = `TZS ${netCash.toLocaleString()}`;
@@ -652,8 +706,9 @@
         document.getElementById('bs-payables').innerText = `TZS ${suppVal.toLocaleString()}`;
         document.getElementById('bs-total-liabilities').innerText = `TZS ${suppVal.toLocaleString()}`;
 
+        document.getElementById('bs-capital').innerText = `TZS ${initialCapital > 0 ? initialCapital.toLocaleString() : '0'}`;
         document.getElementById('bs-retained').innerText = `TZS ${retained.toLocaleString()}`;
-        document.getElementById('bs-total-equity').innerText = `TZS ${(retained + suppVal).toLocaleString()}`;
+        document.getElementById('bs-total-equity').innerText = `TZS ${(retained + (initialCapital > 0 ? initialCapital : 0) + suppVal).toLocaleString()}`;
       } catch (err) { console.error(err); }
     }
 
@@ -663,7 +718,7 @@
           fetch('/api/sales').then(r=>r.json()), 
           fetch('/api/expenses').then(r=>r.json()).catch(()=>[])
         ]);
-        let totS = Array.isArray(s) ? s.reduce((a,b)=>a+Number(b.total || b.total_amount || 0), 0) : 0;
+        let totS = Array.isArray(s) ? s.reduce((a,b)=>a+Number(b.total_amount || 0), 0) : 0;
         let totE = Array.isArray(e) ? e.reduce((a,b)=>a+Number(b.amount||0), 0) : 0;
         document.getElementById('dash-sales').innerText = `TZS ${totS.toLocaleString()}`;
         document.getElementById('dash-expenses').innerText = `TZS ${totE.toLocaleString()}`;

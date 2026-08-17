@@ -41,6 +41,7 @@ const initDb = async () => {
         total_amount NUMERIC(10,2) NOT NULL,
         payment_status VARCHAR(20) DEFAULT 'Paid',
         payment_method VARCHAR(20) DEFAULT 'Cash',
+        customer_name VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -55,13 +56,13 @@ const initDb = async () => {
 
       CREATE TABLE IF NOT EXISTS customers (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
+        name VARCHAR(100) NOT NULL UNIQUE,
         outstanding_balance NUMERIC(10,2) DEFAULT 0
       );
 
       CREATE TABLE IF NOT EXISTS suppliers (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
+        name VARCHAR(100) NOT NULL UNIQUE,
         balance_due NUMERIC(10,2) DEFAULT 0
       );
     `);
@@ -89,25 +90,38 @@ app.post('/api/products', async (req, res) => {
     const { name, quantity, unit_price, min_stock_alert } = req.body;
     const { rows } = await pool.query(
       'INSERT INTO products (name, quantity, unit_price, min_stock_alert) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, quantity || 0, unit_price || 0, min_stock_alert || 5]
+      [name, Number(quantity) || 0, Number(unit_price) || 0, min_stock_alert || 5]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Rekebisho: Stock In / Purchase Product
+// Stock In / Purchase Product (Ina-update pia Supplier Balance)
 app.post('/api/products/:id/purchase', async (req, res) => {
   try {
-    const { quantity } = req.body;
+    const { quantity, supplier_name, unit_cost } = req.body;
+    const qty = Number(quantity) || 0;
+    const cost = Number(unit_cost) || 0;
+    const totalCost = qty * cost;
+
     const { rows } = await pool.query(
       'UPDATE products SET quantity = quantity + $1 WHERE id = $2 RETURNING *',
-      [Number(quantity) || 0, req.params.id]
+      [qty, req.params.id]
     );
+
+    // Kama kuna Supplier Name, update au insert kwenye suppliers list
+    if (supplier_name && supplier_name.trim() !== '') {
+      await pool.query(
+        `INSERT INTO suppliers (name, balance_due) VALUES ($1, $2)
+         ON CONFLICT (name) DO UPDATE SET balance_due = suppliers.balance_due + EXCLUDED.balance_due`,
+        [supplier_name.trim(), totalCost]
+      );
+    }
+
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Rekebisho: Edit Product Quantity & Price
 app.put('/api/products/:id', async (req, res) => {
   try {
     const { quantity, unit_price } = req.body;
@@ -129,15 +143,25 @@ app.get('/api/sales', async (req, res) => {
 
 app.post('/api/sales', async (req, res) => {
   try {
-    const { item_name, quantity, unit_price, payment_status, payment_method } = req.body;
+    const { item_name, quantity, unit_price, payment_status, payment_method, customer_name } = req.body;
     const qty = Number(quantity) || 1;
     const price = Number(unit_price) || 0;
     const total_amount = qty * price;
 
     const { rows } = await pool.query(
-      'INSERT INTO sales (item_name, quantity, unit_price, total_amount, payment_status, payment_method) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [item_name || 'Bidhaa', qty, price, total_amount, payment_status || 'Paid', payment_method || 'Cash']
+      'INSERT INTO sales (item_name, quantity, unit_price, total_amount, payment_status, payment_method, customer_name) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [item_name || 'Bidhaa', qty, price, total_amount, payment_status || 'Paid', payment_method || 'Cash', customer_name || '']
     );
+
+    // Kama mauzo ni ya deni (Credit) na kuna jina la mteja, ongeza kwenye Customers
+    if (payment_status === 'Credit' && customer_name && customer_name.trim() !== '') {
+      await pool.query(
+        `INSERT INTO customers (name, outstanding_balance) VALUES ($1, $2)
+         ON CONFLICT (name) DO UPDATE SET outstanding_balance = customers.outstanding_balance + EXCLUDED.outstanding_balance`,
+        [customer_name.trim(), total_amount]
+      );
+    }
+
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -162,7 +186,7 @@ app.post('/api/expenses', async (req, res) => {
     const { category, amount, paid_from, notes } = req.body;
     const { rows } = await pool.query(
       'INSERT INTO expenses (category, amount, paid_from, notes) VALUES ($1, $2, $3, $4) RETURNING *',
-      [category, amount, paid_from || 'Cash', notes || '']
+      [category, Number(amount) || 0, paid_from || 'Cash', notes || '']
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -180,8 +204,10 @@ app.post('/api/customers', async (req, res) => {
   try {
     const { name, outstanding_balance } = req.body;
     const { rows } = await pool.query(
-      'INSERT INTO customers (name, outstanding_balance) VALUES ($1, $2) RETURNING *',
-      [name, outstanding_balance || 0]
+      `INSERT INTO customers (name, outstanding_balance) VALUES ($1, $2)
+       ON CONFLICT (name) DO UPDATE SET outstanding_balance = customers.outstanding_balance + EXCLUDED.outstanding_balance
+       RETURNING *`,
+      [name, Number(outstanding_balance) || 0]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -198,8 +224,10 @@ app.post('/api/suppliers', async (req, res) => {
   try {
     const { name, balance_due } = req.body;
     const { rows } = await pool.query(
-      'INSERT INTO suppliers (name, balance_due) VALUES ($1, $2) RETURNING *',
-      [name, balance_due || 0]
+      `INSERT INTO suppliers (name, balance_due) VALUES ($1, $2)
+       ON CONFLICT (name) DO UPDATE SET balance_due = suppliers.balance_due + EXCLUDED.balance_due
+       RETURNING *`,
+      [name, Number(balance_due) || 0]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -218,7 +246,7 @@ app.get('/api/reports/profit-loss', async (req, res) => {
   } catch (err) { res.status(500).json({ totalSales: 0, totalExpenses: 0, netProfit: 0 }); }
 });
 
-// Middleware Fallback (Inarudisha public/index.html)
+// Middleware Fallback
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
