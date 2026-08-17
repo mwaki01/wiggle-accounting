@@ -7,10 +7,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Soma static files kutoka kwenye folder la 'public'
+// Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Connection ya PostgreSQL Database
+// PostgreSQL Pool Connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
@@ -20,7 +20,7 @@ pool.on('error', (err) => {
   console.error('PostgreSQL Connection Error:', err.message);
 });
 
-// Kutengeneza Tables
+// Database Initialization
 const initDb = async () => {
   if (!process.env.DATABASE_URL) return;
   try {
@@ -72,7 +72,7 @@ const initDb = async () => {
 };
 initDb();
 
-// Main Route - Inafungua public/index.html
+// Main Route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -96,7 +96,6 @@ app.post('/api/products', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Stock In / Purchase Product (Ina-update pia Supplier Balance)
 app.post('/api/products/:id/purchase', async (req, res) => {
   try {
     const { quantity, supplier_name, unit_cost } = req.body;
@@ -109,7 +108,6 @@ app.post('/api/products/:id/purchase', async (req, res) => {
       [qty, req.params.id]
     );
 
-    // Kama kuna Supplier Name, update au insert kwenye suppliers list
     if (supplier_name && supplier_name.trim() !== '') {
       await pool.query(
         `INSERT INTO suppliers (name, balance_due) VALUES ($1, $2)
@@ -153,7 +151,6 @@ app.post('/api/sales', async (req, res) => {
       [item_name || 'Bidhaa', qty, price, total_amount, payment_status || 'Paid', payment_method || 'Cash', customer_name || '']
     );
 
-    // Kama mauzo ni ya deni (Credit) na kuna jina la mteja, ongeza kwenye Customers
     if (payment_status === 'Credit' && customer_name && customer_name.trim() !== '') {
       await pool.query(
         `INSERT INTO customers (name, outstanding_balance) VALUES ($1, $2)
@@ -203,11 +200,15 @@ app.get('/api/customers', async (req, res) => {
 app.post('/api/customers', async (req, res) => {
   try {
     const { name, outstanding_balance } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Jina la mteja linatakiwa!" });
+    }
+
     const { rows } = await pool.query(
       `INSERT INTO customers (name, outstanding_balance) VALUES ($1, $2)
        ON CONFLICT (name) DO UPDATE SET outstanding_balance = customers.outstanding_balance + EXCLUDED.outstanding_balance
        RETURNING *`,
-      [name, Number(outstanding_balance) || 0]
+      [name.trim(), Number(outstanding_balance) || 0]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -223,11 +224,15 @@ app.get('/api/suppliers', async (req, res) => {
 app.post('/api/suppliers', async (req, res) => {
   try {
     const { name, balance_due } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Jina la muuzaji linatakiwa!" });
+    }
+
     const { rows } = await pool.query(
       `INSERT INTO suppliers (name, balance_due) VALUES ($1, $2)
        ON CONFLICT (name) DO UPDATE SET balance_due = suppliers.balance_due + EXCLUDED.balance_due
        RETURNING *`,
-      [name, Number(balance_due) || 0]
+      [name.trim(), Number(balance_due) || 0]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -246,7 +251,7 @@ app.get('/api/reports/profit-loss', async (req, res) => {
   } catch (err) { res.status(500).json({ totalSales: 0, totalExpenses: 0, netProfit: 0 }); }
 });
 
-// Middleware Fallback
+// Fallback Route
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

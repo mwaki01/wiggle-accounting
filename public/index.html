@@ -456,15 +456,25 @@
 
     document.getElementById('customer-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const body = {
-        name: document.getElementById('cust_add_name').value,
-        outstanding_balance: document.getElementById('cust_add_balance').value
-      };
-      const res = await fetch('/api/customers', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-      if(res.ok) { 
-        document.getElementById('customer-form').reset(); 
-        await loadCustomers(); 
-        alert('Mteja amehifadhiwa kikamilifu!');
+      const name = document.getElementById('cust_add_name').value.trim();
+      const balance = document.getElementById('cust_add_balance').value;
+
+      try {
+        const res = await fetch('/api/customers', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ name, outstanding_balance: balance })
+        });
+        if(res.ok) { 
+          document.getElementById('customer-form').reset(); 
+          await loadCustomers(); 
+          alert('Mteja amehifadhiwa kikamilifu!');
+        } else {
+          const errData = await res.json();
+          alert('Kosa: ' + (errData.error || 'Imeshindwa kuhifadhi'));
+        }
+      } catch (err) {
+        alert('Kosa la mtandao: ' + err.message);
       }
     });
 
@@ -487,15 +497,25 @@
 
     document.getElementById('supplier-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const body = {
-        name: document.getElementById('supp_add_name').value,
-        balance_due: document.getElementById('supp_add_balance').value
-      };
-      const res = await fetch('/api/suppliers', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-      if(res.ok) { 
-        document.getElementById('supplier-form').reset(); 
-        await loadSuppliers(); 
-        alert('Muuzaji amehifadhiwa kikamilifu!');
+      const name = document.getElementById('supp_add_name').value.trim();
+      const balance = document.getElementById('supp_add_balance').value;
+
+      try {
+        const res = await fetch('/api/suppliers', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ name, balance_due: balance })
+        });
+        if(res.ok) { 
+          document.getElementById('supplier-form').reset(); 
+          await loadSuppliers(); 
+          alert('Muuzaji amehifadhiwa kikamilifu!');
+        } else {
+          const errData = await res.json();
+          alert('Kosa: ' + (errData.error || 'Imeshindwa kuhifadhi'));
+        }
+      } catch (err) {
+        alert('Kosa la mtandao: ' + err.message);
       }
     });
 
@@ -545,12 +565,10 @@
         const res = await fetch('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         
         if(res.ok) {
-          // Refresh UI
           await loadSales();
           await loadCustomers();
           await loadDashboard();
 
-          // Prepare receipt data
           document.getElementById('rec-item').innerText = item;
           document.getElementById('rec-qty').innerText = qty;
           document.getElementById('rec-price').innerText = Number(price).toLocaleString();
@@ -558,7 +576,6 @@
           document.getElementById('rec-customer').innerText = cust;
           document.getElementById('rec-status').innerText = status;
           
-          // Trigger Print safely
           setTimeout(() => {
             window.print();
             document.getElementById('sales-form').reset();
@@ -588,8 +605,10 @@
         paid_from: document.getElementById('exp_paid_from').value,
         notes: document.getElementById('exp_notes').value
       };
-      const res = await fetch('/api/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if(res.ok) { alert('Matumizi yamerekodiwa!'); document.getElementById('expenses-form').reset(); loadDashboard(); }
+      try {
+        const res = await fetch('/api/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if(res.ok) { alert('Matumizi yamerekodiwa!'); document.getElementById('expenses-form').reset(); loadDashboard(); }
+      } catch (err) { alert('Kosa la mtandao'); }
     });
 
     // INVENTORY
@@ -627,8 +646,10 @@
         unit_price: document.getElementById('prod_price').value,
         min_stock_alert: document.getElementById('prod_alert').value
       };
-      const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if(res.ok) { document.getElementById('product-form').reset(); loadProducts(); }
+      try {
+        const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if(res.ok) { document.getElementById('product-form').reset(); loadProducts(); }
+      } catch(err) { console.error(err); }
     });
 
     document.getElementById('purchase-form').addEventListener('submit', async (e) => {
@@ -638,17 +659,19 @@
       const cost = document.getElementById('purchase_cost').value;
       const supplier = document.getElementById('purchase_supplier').value;
 
-      const res = await fetch(`/api/products/${id}/purchase`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ quantity: qty, unit_cost: cost, supplier_name: supplier }) 
-      });
-      if(res.ok) { 
-        document.getElementById('purchase-form').reset(); 
-        await loadProducts(); 
-        await loadSuppliers(); 
-        alert('Mzigo umeongezwa kikamilifu!');
-      }
+      try {
+        const res = await fetch(`/api/products/${id}/purchase`, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ quantity: qty, unit_cost: cost, supplier_name: supplier }) 
+        });
+        if(res.ok) { 
+          document.getElementById('purchase-form').reset(); 
+          await loadProducts(); 
+          await loadSuppliers(); 
+          alert('Mzigo umeongezwa kikamilifu!');
+        }
+      } catch (err) { alert('Kosa la mtandao'); }
     });
 
     async function editProduct(id, oldQty, oldPrice) {
@@ -715,7 +738,7 @@
     async function loadDashboard() {
       try {
         const [s, e] = await Promise.all([
-          fetch('/api/sales').then(r=>r.json()), 
+          fetch('/api/sales').then(r=>r.json()).catch(()=>[]), 
           fetch('/api/expenses').then(r=>r.json()).catch(()=>[])
         ]);
         let totS = Array.isArray(s) ? s.reduce((a,b)=>a+Number(b.total_amount || 0), 0) : 0;
@@ -726,6 +749,7 @@
       } catch (err) { console.error(err); }
     }
 
+    // Load initial state
     loadDashboard();
   </script>
 </body>
