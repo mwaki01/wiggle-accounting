@@ -7,10 +7,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serving static files kutoka root directory
+// Ruhusu Express kusoma mafaili kwenye root folder (index.html, n.k)
 app.use(express.static(path.join(__dirname)));
 
-// Connection ya PostgreSQL Database
+// Connection ya PostgreSQL Database (Safe Mode)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
@@ -20,7 +20,7 @@ pool.on('error', (err) => {
   console.error('PostgreSQL Connection Error:', err.message);
 });
 
-// Kutengeneza Tables (Kama hazijaundwa)
+// Kutengeneza Tables
 const initDb = async () => {
   if (!process.env.DATABASE_URL) return;
   try {
@@ -71,12 +71,7 @@ const initDb = async () => {
 };
 initDb();
 
-// Home route - Inafungua index.html
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// ---------------- PRODUCTS / INVENTORY ----------------
+// ---------------- API ROUTES ----------------
 app.get('/api/products', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM products ORDER BY id ASC');
@@ -95,31 +90,6 @@ app.post('/api/products', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/products/:id/purchase', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { quantity } = req.body;
-    const { rows } = await pool.query(
-      'UPDATE products SET quantity = quantity + $1 WHERE id = $2 RETURNING *',
-      [quantity, id]
-    );
-    res.json(rows[0]);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/products/:id/stockout', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { quantity } = req.body;
-    const { rows } = await pool.query(
-      'UPDATE products SET quantity = GREATEST(0, quantity - $1) WHERE id = $2 RETURNING *',
-      [quantity, id]
-    );
-    res.json(rows[0]);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// ---------------- SALES ----------------
 app.get('/api/sales', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM sales ORDER BY id DESC');
@@ -149,7 +119,6 @@ app.delete('/api/sales/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ---------------- EXPENSES ----------------
 app.get('/api/expenses', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM expenses ORDER BY id DESC');
@@ -168,7 +137,6 @@ app.post('/api/expenses', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ---------------- CUSTOMERS & SUPPLIERS ----------------
 app.get('/api/customers', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM customers ORDER BY id ASC');
@@ -183,7 +151,6 @@ app.get('/api/suppliers', async (req, res) => {
   } catch (err) { res.status(500).json([]); }
 });
 
-// ---------------- REPORTS ----------------
 app.get('/api/reports/profit-loss', async (req, res) => {
   try {
     const { rows: salesRows } = await pool.query('SELECT total_amount FROM sales');
@@ -196,43 +163,8 @@ app.get('/api/reports/profit-loss', async (req, res) => {
   } catch (err) { res.status(500).json({ totalSales: 0, totalExpenses: 0, netProfit: 0 }); }
 });
 
-app.get('/api/reports/balance-sheet', async (req, res) => {
-  try {
-    const { rows: products } = await pool.query('SELECT quantity, unit_price FROM products');
-    const inventoryValue = products.reduce((sum, p) => sum + (Number(p.quantity) * Number(p.unit_price)), 0);
-
-    const { rows: sales } = await pool.query('SELECT total_amount, payment_status, payment_method FROM sales');
-    let cashOnHand = 0, bankBalance = 0, accountsReceivable = 0;
-
-    sales.forEach(s => {
-      const amt = Number(s.total_amount);
-      if (s.payment_status === 'Paid') {
-        if (s.payment_method === 'Bank') bankBalance += amt;
-        else cashOnHand += amt;
-      } else accountsReceivable += amt;
-    });
-
-    const { rows: expenses } = await pool.query('SELECT amount, paid_from FROM expenses');
-    expenses.forEach(e => {
-      const amt = Number(e.amount);
-      if (e.paid_from === 'Bank') bankBalance -= amt;
-      else cashOnHand -= amt;
-    });
-
-    const totalAssets = cashOnHand + bankBalance + inventoryValue + accountsReceivable;
-    const totalLiabilities = 0;
-    const capital = totalAssets - totalLiabilities;
-
-    res.json({
-      assets: { cash: cashOnHand, bank: bankBalance, inventory: inventoryValue, receivables: accountsReceivable, totalAssets },
-      liabilities: { payables: totalLiabilities, totalLiabilities },
-      equity: { capital, totalEquity: capital }
-    });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Fallback Route
-app.get('*', (req, res) => {
+// REKEBISHO LILILOFANYIKA HAPA: Badala ya app.get('*'), tunatumiwa middleware hii salama
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
