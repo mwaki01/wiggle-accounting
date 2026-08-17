@@ -6,13 +6,21 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Soma static files kutoka kwenye folder la 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Connection ya PostgreSQL Database
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
+pool.on('error', (err) => {
+  console.error('PostgreSQL Connection Error:', err.message);
+});
+
+// Kutengeneza Tables
 const initDb = async () => {
   if (!process.env.DATABASE_URL) return;
   try {
@@ -21,7 +29,8 @@ const initDb = async () => {
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         quantity INT NOT NULL DEFAULT 0,
-        unit_price NUMERIC(10,2) NOT NULL
+        unit_price NUMERIC(10,2) NOT NULL,
+        min_stock_alert INT DEFAULT 5
       );
 
       CREATE TABLE IF NOT EXISTS sales (
@@ -47,8 +56,13 @@ const initDb = async () => {
       CREATE TABLE IF NOT EXISTS customers (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
-        phone VARCHAR(20),
         outstanding_balance NUMERIC(10,2) DEFAULT 0
+      );
+
+      CREATE TABLE IF NOT EXISTS suppliers (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        balance_due NUMERIC(10,2) DEFAULT 0
       );
     `);
   } catch (err) {
@@ -57,11 +71,12 @@ const initDb = async () => {
 };
 initDb();
 
+// Main Route - Inafungua public/index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// PRODUCTS
+// ---------------- PRODUCTS ----------------
 app.get('/api/products', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM products ORDER BY id ASC');
@@ -71,40 +86,40 @@ app.get('/api/products', async (req, res) => {
 
 app.post('/api/products', async (req, res) => {
   try {
-    const { name, quantity, unit_price } = req.body;
+    const { name, quantity, unit_price, min_stock_alert } = req.body;
     const { rows } = await pool.query(
-      'INSERT INTO products (name, quantity, unit_price) VALUES ($1, $2, $3) RETURNING *',
-      [name, quantity || 0, unit_price || 0]
+      'INSERT INTO products (name, quantity, unit_price, min_stock_alert) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, quantity || 0, unit_price || 0, min_stock_alert || 5]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Rekebisho: Stock In / Purchase Product
 app.post('/api/products/:id/purchase', async (req, res) => {
   try {
-    const { id } = req.params;
     const { quantity } = req.body;
     const { rows } = await pool.query(
       'UPDATE products SET quantity = quantity + $1 WHERE id = $2 RETURNING *',
-      [quantity, id]
+      [Number(quantity) || 0, req.params.id]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Rekebisho: Edit Product Quantity & Price
 app.put('/api/products/:id', async (req, res) => {
   try {
-    const { id } = req.params;
     const { quantity, unit_price } = req.body;
     const { rows } = await pool.query(
       'UPDATE products SET quantity = $1, unit_price = $2 WHERE id = $3 RETURNING *',
-      [quantity, unit_price, id]
+      [quantity, unit_price, req.params.id]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// SALES
+// ---------------- SALES ----------------
 app.get('/api/sales', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM sales ORDER BY id DESC');
@@ -114,14 +129,14 @@ app.get('/api/sales', async (req, res) => {
 
 app.post('/api/sales', async (req, res) => {
   try {
-    const { item_name, quantity, unit_price, payment_method } = req.body;
+    const { item_name, quantity, unit_price, payment_status, payment_method } = req.body;
     const qty = Number(quantity) || 1;
     const price = Number(unit_price) || 0;
     const total_amount = qty * price;
 
     const { rows } = await pool.query(
       'INSERT INTO sales (item_name, quantity, unit_price, total_amount, payment_status, payment_method) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [item_name || 'Bidhaa', qty, price, total_amount, 'Paid', payment_method || 'Cash']
+      [item_name || 'Bidhaa', qty, price, total_amount, payment_status || 'Paid', payment_method || 'Cash']
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -134,7 +149,7 @@ app.delete('/api/sales/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// EXPENSES
+// ---------------- EXPENSES ----------------
 app.get('/api/expenses', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM expenses ORDER BY id DESC');
@@ -147,13 +162,13 @@ app.post('/api/expenses', async (req, res) => {
     const { category, amount, paid_from, notes } = req.body;
     const { rows } = await pool.query(
       'INSERT INTO expenses (category, amount, paid_from, notes) VALUES ($1, $2, $3, $4) RETURNING *',
-      [category, amount, paid_from, notes]
+      [category, amount, paid_from || 'Cash', notes || '']
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// CUSTOMERS
+// ---------------- CUSTOMERS & SUPPLIERS ----------------
 app.get('/api/customers', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM customers ORDER BY id ASC');
@@ -163,16 +178,34 @@ app.get('/api/customers', async (req, res) => {
 
 app.post('/api/customers', async (req, res) => {
   try {
-    const { name, phone, outstanding_balance } = req.body;
+    const { name, outstanding_balance } = req.body;
     const { rows } = await pool.query(
-      'INSERT INTO customers (name, phone, outstanding_balance) VALUES ($1, $2, $3) RETURNING *',
-      [name, phone, outstanding_balance || 0]
+      'INSERT INTO customers (name, outstanding_balance) VALUES ($1, $2) RETURNING *',
+      [name, outstanding_balance || 0]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// REPORTS
+app.get('/api/suppliers', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM suppliers ORDER BY id ASC');
+    res.json(rows);
+  } catch (err) { res.status(500).json([]); }
+});
+
+app.post('/api/suppliers', async (req, res) => {
+  try {
+    const { name, balance_due } = req.body;
+    const { rows } = await pool.query(
+      'INSERT INTO suppliers (name, balance_due) VALUES ($1, $2) RETURNING *',
+      [name, balance_due || 0]
+    );
+    res.json(rows[0]);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ---------------- REPORTS ----------------
 app.get('/api/reports/profit-loss', async (req, res) => {
   try {
     const { rows: salesRows } = await pool.query('SELECT total_amount FROM sales');
@@ -185,39 +218,7 @@ app.get('/api/reports/profit-loss', async (req, res) => {
   } catch (err) { res.status(500).json({ totalSales: 0, totalExpenses: 0, netProfit: 0 }); }
 });
 
-app.get('/api/reports/balance-sheet', async (req, res) => {
-  try {
-    const { rows: products } = await pool.query('SELECT quantity, unit_price FROM products');
-    const inventoryValue = products.reduce((sum, p) => sum + (Number(p.quantity) * Number(p.unit_price)), 0);
-
-    const { rows: sales } = await pool.query('SELECT total_amount, payment_method FROM sales');
-    let cashOnHand = 0, bankBalance = 0;
-
-    sales.forEach(s => {
-      const amt = Number(s.total_amount);
-      if (s.payment_method === 'Bank') bankBalance += amt;
-      else cashOnHand += amt;
-    });
-
-    const { rows: expenses } = await pool.query('SELECT amount, paid_from FROM expenses');
-    expenses.forEach(e => {
-      const amt = Number(e.amount);
-      if (e.paid_from === 'Bank') bankBalance -= amt;
-      else cashOnHand -= amt;
-    });
-
-    const totalAssets = cashOnHand + bankBalance + inventoryValue;
-    const totalLiabilities = 0;
-    const capital = totalAssets - totalLiabilities;
-
-    res.json({
-      assets: { cash: cashOnHand, bank: bankBalance, inventory: inventoryValue, totalAssets },
-      liabilities: { totalLiabilities },
-      equity: { capital }
-    });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
+// Middleware Fallback (Inarudisha public/index.html)
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
