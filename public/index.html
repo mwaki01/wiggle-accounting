@@ -2,754 +2,833 @@
 <html lang="sw">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Wiggle Accounting</title>
-  
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-    body { display: flex; background-color: #f4f6f9; color: #333; min-height: 100vh; overflow-x: hidden; }
-
-    .sidebar {
-      position: fixed; top: 0; left: 0; height: 100vh; width: 65px;
-      background: #1e293b; color: #fff; transition: width 0.3s ease-in-out;
-      overflow-x: hidden; z-index: 1000; white-space: nowrap; box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
     }
 
-    @media (min-width: 769px) {
-      .sidebar:hover { width: 250px; }
-      .sidebar:hover .brand-box h2, .sidebar:hover ul li a span { opacity: 1; }
+    body {
+      margin: 0;
+      background: #f1f5f9;
+      color: #172033;
     }
 
-    .brand-box { display: flex; align-items: center; padding: 15px 18px; gap: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); height: 65px; }
-    .brand-box img { height: 32px; width: 32px; object-fit: contain; }
-    .brand-box h2 { color: #38bdf8; font-size: 18px; text-transform: uppercase; opacity: 0; transition: opacity 0.2s; }
-
-    .sidebar ul { list-style: none; padding-top: 10px; }
-    .sidebar ul li a {
-      display: flex; align-items: center; padding: 14px 20px; color: #cbd5e1;
-      text-decoration: none; font-size: 14px; cursor: pointer; gap: 15px; transition: background 0.2s, color 0.2s;
-    }
-    .sidebar ul li a i { font-size: 18px; min-width: 25px; text-align: center; color: #38bdf8; }
-    .sidebar ul li a span { opacity: 0; transition: opacity 0.2s; }
-    .sidebar ul li a:hover, .sidebar ul li a.active { background: #0f172a; color: #fff; border-left: 4px solid #38bdf8; }
-
-    .main-content { flex: 1; margin-left: 65px; padding: 25px; transition: margin-left 0.3s ease-in-out; width: calc(100% - 65px); }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .role-badge { background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; }
-
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; margin-bottom: 25px; }
-    .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .card h4 { color: #64748b; font-size: 13px; margin-bottom: 8px; text-transform: uppercase; }
-    .card p { font-size: 20px; font-weight: bold; color: #0f172a; }
-    .card.alert { border-left: 4px solid #ef4444; }
-    .card.success { border-left: 4px solid #22c55e; }
-
-    .section-block { display: none; }
-    .section-block.active { display: block; }
-    .form-container, .table-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 25px; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-    .form-group { display: flex; flex-direction: column; gap: 5px; }
-    .form-group label { font-size: 13px; color: #64748b; font-weight: bold; }
-    .form-group input, .form-group select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 14px; }
-    .btn { background: #0284c7; color: white; padding: 10px 18px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-    .btn-green { background: #10b981; }
-    .btn-red { background: #ef4444; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
-    th { background-color: #f8fafc; color: #475569; }
-
-    @media (max-width: 768px) {
-      body { flex-direction: column; }
-      .sidebar { position: relative; width: 100%; height: auto; }
-      .sidebar ul { display: flex; overflow-x: auto; background: #0f172a; }
-      .sidebar ul li a { padding: 10px 15px; border-left: none !important; border-bottom: 3px solid transparent; }
-      .sidebar ul li a span, .brand-box h2 { opacity: 1; }
-      .sidebar ul li a.active { border-bottom: 3px solid #38bdf8; }
-      .main-content { margin-left: 0; width: 100%; padding: 15px; }
+    nav {
+      background: #0f172a;
+      color: white;
+      padding: 15px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
-    @media print {
-      body * { visibility: hidden; }
-      #printableReceipt, #printableReceipt * { visibility: visible; }
-      #printableReceipt { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+    nav strong {
+      color: #38bdf8;
+      margin-right: 15px;
+    }
+
+    nav button {
+      border: 0;
+      padding: 10px 13px;
+      background: transparent;
+      color: #cbd5e1;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    nav button:hover,
+    nav button.active {
+      background: #0284c7;
+      color: white;
+    }
+
+    main {
+      max-width: 1250px;
+      margin: auto;
+      padding: 25px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+    }
+
+    .card,
+    .box {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 7px #0001;
+      margin-bottom: 20px;
+    }
+
+    .card h4 {
+      color: #64748b;
+      margin: 0 0 10px;
+    }
+
+    .card p {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      color: #475569;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    button.submit {
+      background: #0284c7;
+      color: white;
+      border: 0;
+      padding: 11px 18px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button.danger {
+      background: #dc2626;
+    }
+
+    button.success {
+      background: #059669;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: white;
+    }
+
+    th,
+    td {
+      padding: 11px;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+    }
+
+    th {
+      background: #e0f2fe;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    @media (max-width: 600px) {
+      main {
+        padding: 12px;
+      }
+
+      nav strong {
+        width: 100%;
+      }
     }
   </style>
 </head>
+
 <body>
+  <nav>
+    <strong>WIGGLE ACCOUNTING</strong>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="brand-box">
-      <img src="/logo.png" alt="Wiggle Logo">
-      <h2>WIGGLE</h2>
-    </div>
-    <ul>
-      <li><a onclick="showSection('dashboard', event)" class="nav-link active"><i class="bi bi-speedometer2"></i> <span>Dashboard</span></a></li>
-      <li><a onclick="showSection('sales', event)" class="nav-link"><i class="bi bi-cart"></i> <span>Sales</span></a></li>
-      <li><a onclick="showSection('expenses', event)" class="nav-link"><i class="bi bi-wallet2"></i> <span>Expenses</span></a></li>
-      <li><a onclick="showSection('inventory', event)" class="nav-link"><i class="bi bi-box-seam"></i> <span>Inventory</span></a></li>
-      <li><a onclick="showSection('customers', event)" class="nav-link"><i class="bi bi-people"></i> <span>Customers</span></a></li>
-      <li><a onclick="showSection('suppliers', event)" class="nav-link"><i class="bi bi-truck"></i> <span>Suppliers</span></a></li>
-      <li><a onclick="showSection('banking', event)" class="nav-link"><i class="bi bi-bank"></i> <span>Banking</span></a></li>
-      <li><a onclick="showSection('reports', event)" class="nav-link"><i class="bi bi-file-earmark-bar-graph"></i> <span>Reports</span></a></li>
-      <li><a onclick="showSection('users', event)" class="nav-link"><i class="bi bi-person-gear"></i> <span>Multi-user</span></a></li>
-      <li><a onclick="showSection('backup', event)" class="nav-link"><i class="bi bi-cloud-arrow-up"></i> <span>Backup</span></a></li>
-    </ul>
-  </div>
+    <button class="nav-btn active" data-section="dashboard">
+      <i class="bi bi-speedometer2"></i> Dashboard
+    </button>
 
-  <!-- MAIN CONTENT -->
-  <div class="main-content">
-    <div class="header">
-      <h1 id="page-title">Dashboard Summary</h1>
-      <span class="role-badge" id="current-role">Role: Owner</span>
-    </div>
+    <button class="nav-btn" data-section="sales">
+      <i class="bi bi-cart"></i> Sales
+    </button>
 
-    <!-- 1. DASHBOARD -->
-    <div id="dashboard" class="section-block active">
-      <div class="grid">
-        <div class="card success"><h4>Today's Sales</h4><p id="dash-sales">TZS 0</p></div>
-        <div class="card alert"><h4>Today's Expenses</h4><p id="dash-expenses">TZS 0</p></div>
-        <div class="card success"><h4>Net Profit (Today)</h4><p id="dash-profit">TZS 0</p></div>
+    <button class="nav-btn" data-section="expenses">
+      <i class="bi bi-wallet2"></i> Expenses
+    </button>
+
+    <button class="nav-btn" data-section="inventory">
+      <i class="bi bi-box-seam"></i> Inventory
+    </button>
+
+    <button class="nav-btn" data-section="customers">
+      <i class="bi bi-people"></i> Customers
+    </button>
+
+    <button class="nav-btn" data-section="suppliers">
+      <i class="bi bi-truck"></i> Suppliers
+    </button>
+
+    <button class="nav-btn" data-section="reports">
+      <i class="bi bi-file-earmark-bar-graph"></i> Reports
+    </button>
+  </nav>
+
+  <main>
+    <h1 id="title">Dashboard</h1>
+
+    <section id="dashboard" class="section active">
+      <div class="cards">
+        <div class="card">
+          <h4>Total Sales</h4>
+          <p id="dash-sales">TZS 0</p>
+        </div>
+
+        <div class="card">
+          <h4>Total Expenses</h4>
+          <p id="dash-expenses">TZS 0</p>
+        </div>
+
+        <div class="card">
+          <h4>Net Profit</h4>
+          <p id="dash-profit">TZS 0</p>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 2. SALES -->
-    <div id="sales" class="section-block">
-      <div class="form-container">
-        <h3>Create Sales Invoice</h3>
+    <section id="sales" class="section">
+      <div class="box">
+        <h2>Record Sale</h2>
+
         <form id="sales-form">
-          <div class="form-grid">
-            <div class="form-group"><label>Item Name / Bidhaa</label><input type="text" id="item_name" placeholder="Soda / Maji" required></div>
-            <div class="form-group"><label>Quantity (Chupa)</label><input type="number" id="quantity" min="1" placeholder="Idadi ya chupa" required></div>
-            <div class="form-group"><label>Unit Price (Bei ya Chupa)</label><input type="number" id="unit_price" placeholder="Bei kwa chupa" required></div>
-            <div class="form-group"><label>Customer Name</label><input type="text" id="cust_name" placeholder="Juma Hamisi"></div>
-            <div class="form-group">
-              <label>Payment Status</label>
-              <select id="payment_status">
-                <option value="Paid">Paid</option>
-                <option value="Credit">Credit (Deni)</option>
-              </select>
-            </div>
+          <div>
+            <label>Bidhaa</label>
+            <input id="item_name" required>
           </div>
-          <button type="submit" class="btn">Save & Print Receipt</button>
+
+          <div>
+            <label>Quantity</label>
+            <input id="quantity" type="number" min="1" required>
+          </div>
+
+          <div>
+            <label>Unit Price</label>
+            <input id="unit_price" type="number" min="0" required>
+          </div>
+
+          <div>
+            <label>Customer</label>
+            <input id="customer_name">
+          </div>
+
+          <div>
+            <label>Payment Status</label>
+            <select id="payment_status">
+              <option value="Paid">Paid</option>
+              <option value="Credit">Credit</option>
+            </select>
+          </div>
+
+          <div class="full">
+            <button class="submit" type="submit">Hifadhi Sale</button>
+          </div>
         </form>
       </div>
 
-      <div class="table-container">
-        <h3>Sales Records (Orodha ya Mauzo)</h3>
+      <div class="box table-wrap">
+        <h2>Sales Records</h2>
+
         <table>
           <thead>
             <tr>
               <th>Bidhaa</th>
               <th>Idadi</th>
               <th>Bei</th>
-              <th>Mteja</th>
-              <th>Hali</th>
-              <th>Jumla (TZS)</th>
-              <th>Action</th>
+              <th>Customer</th>
+              <th>Status</th>
+              <th>Jumla</th>
+              <th></th>
             </tr>
           </thead>
-          <tbody id="sales-table-body">
-            <tr><td colspan="7">Inapakia mauzo...</td></tr>
-          </tbody>
+
+          <tbody id="sales-body"></tbody>
         </table>
       </div>
-    </div>
+    </section>
 
-    <!-- 3. EXPENSES -->
-    <div id="expenses" class="section-block">
-      <div class="form-container">
-        <h3>Record Expense</h3>
-        <form id="expenses-form">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Category</label>
-              <select id="exp_category" onchange="toggleCustomCategory(this.value)">
-                <option>Rent</option><option>Salaries</option><option>Transport</option>
-                <option>Utilities</option><option>Fuel</option><option>Repairs</option>
-                <option value="Others">Others (Taja Kategoria)</option>
-              </select>
-            </div>
-            <div class="form-group" id="custom-cat-group" style="display:none;">
-              <label>Specify Category</label>
-              <input type="text" id="exp_custom_category" placeholder="Andika kategoria hapa">
-            </div>
-            <div class="form-group"><label>Amount (TZS)</label><input type="number" id="exp_amount" required></div>
-            <div class="form-group"><label>Paid From</label><select id="exp_paid_from"><option>Cash</option><option>Bank</option></select></div>
-            <div class="form-group"><label>Notes</label><input type="text" id="exp_notes" placeholder="Maelezo"></div>
+    <section id="expenses" class="section">
+      <div class="box">
+        <h2>Record Expense</h2>
+
+        <form id="expense-form">
+          <div>
+            <label>Category</label>
+            <input id="expense-category" required>
           </div>
-          <button type="submit" class="btn btn-red">Save Expense</button>
+
+          <div>
+            <label>Amount</label>
+            <input id="expense-amount" type="number" min="0" required>
+          </div>
+
+          <div>
+            <label>Paid From</label>
+            <select id="expense-paid">
+              <option>Cash</option>
+              <option>Bank</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Notes</label>
+            <input id="expense-notes">
+          </div>
+
+          <div class="full">
+            <button class="submit danger" type="submit">
+              Hifadhi Expense
+            </button>
+          </div>
         </form>
       </div>
-    </div>
+    </section>
 
-    <!-- 4. INVENTORY -->
-    <div id="inventory" class="section-block">
-      <div class="form-container">
-        <h3>1. Add New Product (Sajili Bidhaa Mpya)</h3>
+    <section id="inventory" class="section">
+      <div class="box">
+        <h2>Ongeza Bidhaa</h2>
+
         <form id="product-form">
-          <div class="form-grid">
-            <div class="form-group"><label>Product Name</label><input type="text" id="prod_name" required></div>
-            <div class="form-group"><label>Initial Quantity</label><input type="number" id="prod_qty" required></div>
-            <div class="form-group"><label>Unit Price (TZS)</label><input type="number" id="prod_price" required></div>
-            <div class="form-group"><label>Low Stock Limit</label><input type="number" id="prod_alert" value="5"></div>
+          <div>
+            <label>Jina la Bidhaa</label>
+            <input id="product-name" required>
           </div>
-          <button type="submit" class="btn">Add New Product</button>
+
+          <div>
+            <label>Quantity</label>
+            <input id="product-quantity" type="number" min="0" required>
+          </div>
+
+          <div>
+            <label>Unit Price</label>
+            <input id="product-price" type="number" min="0" required>
+          </div>
+
+          <div class="full">
+            <button class="submit" type="submit">Ongeza Bidhaa</button>
+          </div>
         </form>
       </div>
 
-      <div class="form-container">
-        <h3>2. Record Purchase (Stock In / Mzigo Mpya)</h3>
+      <div class="box">
+        <h2>Record Purchase / Stock In</h2>
+
         <form id="purchase-form">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Select Product</label>
-              <select id="purchase_prod_id" required></select>
-            </div>
-            <div class="form-group"><label>Quantity Added</label><input type="number" id="purchase_qty" min="1" required></div>
-            <div class="form-group"><label>Unit Cost (Gharama kwa Kipengele)</label><input type="number" id="purchase_cost" placeholder="0"></div>
-            <div class="form-group"><label>Supplier Name (Muuzaji)</label><input type="text" id="purchase_supplier" placeholder="Jina la Muuzaji"></div>
+          <div>
+            <label>Product</label>
+            <select id="purchase-product" required></select>
           </div>
-          <button type="submit" class="btn btn-green">Add Stock & Record Purchase</button>
+
+          <div>
+            <label>Quantity</label>
+            <input id="purchase-quantity" type="number" min="1" required>
+          </div>
+
+          <div>
+            <label>Unit Cost</label>
+            <input id="purchase-cost" type="number" min="0" required>
+          </div>
+
+          <div>
+            <label>Supplier Name</label>
+            <input id="purchase-supplier">
+          </div>
+
+          <div class="full">
+            <button class="submit success" type="submit">
+              Hifadhi Purchase
+            </button>
+          </div>
         </form>
       </div>
 
-      <div class="table-container">
-        <h3>Current Stock Balance</h3>
+      <div class="box table-wrap">
+        <h2>Stock</h2>
+
         <table>
-          <thead><tr><th>ID</th><th>Name</th><th>Current Quantity</th><th>Unit Price</th><th>Action</th></tr></thead>
-          <tbody id="products-table-body"></tbody>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Jina</th>
+              <th>Quantity</th>
+              <th>Bei</th>
+            </tr>
+          </thead>
+
+          <tbody id="products-body"></tbody>
         </table>
       </div>
-    </div>
+    </section>
 
-    <!-- 5. CUSTOMERS -->
-    <div id="customers" class="section-block">
-      <div class="form-container">
-        <h3>Ongeza Mteja Mpya</h3>
+    <section id="customers" class="section">
+      <div class="box">
+        <h2>Ongeza Customer</h2>
+
         <form id="customer-form">
-          <div class="form-grid">
-            <div class="form-group"><label>Customer Name</label><input type="text" id="cust_add_name" required></div>
-            <div class="form-group"><label>Initial Outstanding Debt (TZS)</label><input type="number" id="cust_add_balance" value="0"></div>
+          <div>
+            <label>Jina</label>
+            <input id="new-customer" required>
           </div>
-          <button type="submit" class="btn">Hifadhi Mteja</button>
+
+          <div>
+            <label>Deni la Mwanzo</label>
+            <input id="customer-balance" type="number" min="0" value="0">
+          </div>
+
+          <div>
+            <button class="submit" type="submit">Hifadhi Customer</button>
+          </div>
         </form>
       </div>
 
-      <div class="table-container">
-        <h3>Customer List & Outstanding Balances (Wateja Wanaodaiwa)</h3>
+      <div class="box table-wrap">
+        <h2>Customers kutoka Sales</h2>
+
         <table>
-          <thead><tr><th>ID</th><th>Customer Name</th><th>Outstanding Debt (Deni)</th></tr></thead>
-          <tbody id="customers-table-body">
-            <tr><td colspan="3">Inapakia wateja...</td></tr>
-          </tbody>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Jina</th>
+              <th>Total Credit Sales</th>
+              <th>Deni</th>
+            </tr>
+          </thead>
+
+          <tbody id="customers-body"></tbody>
         </table>
       </div>
-    </div>
+    </section>
 
-    <!-- 6. SUPPLIERS -->
-    <div id="suppliers" class="section-block">
-      <div class="form-container">
-        <h3>Ongeza Muuzaji Mpya (Supplier)</h3>
+    <section id="suppliers" class="section">
+      <div class="box">
+        <h2>Ongeza Supplier</h2>
+
         <form id="supplier-form">
-          <div class="form-grid">
-            <div class="form-group"><label>Supplier Name</label><input type="text" id="supp_add_name" required></div>
-            <div class="form-group"><label>Balance Due (TZS)</label><input type="number" id="supp_add_balance" value="0"></div>
+          <div>
+            <label>Jina</label>
+            <input id="new-supplier" required>
           </div>
-          <button type="submit" class="btn">Hifadhi Muuzaji</button>
+
+          <div>
+            <label>Balance Due</label>
+            <input id="supplier-balance" type="number" min="0" value="0">
+          </div>
+
+          <div>
+            <button class="submit" type="submit">Hifadhi Supplier</button>
+          </div>
         </form>
       </div>
 
-      <div class="table-container">
-        <h3>Supplier List & Payables (Wauzaji Wanaoikopesha Biashara)</h3>
+      <div class="box table-wrap">
+        <h2>Suppliers kutoka Purchases</h2>
+
         <table>
-          <thead><tr><th>ID</th><th>Supplier Name</th><th>Balance Due (Salio la Kulipwa)</th></tr></thead>
-          <tbody id="suppliers-table-body">
-            <tr><td colspan="3">Inapakia wauzaji...</td></tr>
-          </tbody>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Jina</th>
+              <th>Total Purchases</th>
+              <th>Balance Due</th>
+            </tr>
+          </thead>
+
+          <tbody id="suppliers-body"></tbody>
         </table>
       </div>
-    </div>
+    </section>
 
-    <!-- 7. BANKING -->
-    <div id="banking" class="section-block">
-      <div class="form-container">
-        <h3>Banking & Transfers</h3>
-        <form onsubmit="event.preventDefault(); alert('Transfer recorded!');">
-          <div class="form-grid">
-            <div class="form-group"><label>Transfer Type</label><select><option>Deposit to Bank</option><option>Withdraw to Cash</option></select></div>
-            <div class="form-group"><label>Amount (TZS)</label><input type="number" required></div>
-          </div>
-          <button type="submit" class="btn">Record Transfer</button>
-        </form>
+    <section id="reports" class="section">
+      <div class="box">
+        <h2>Profit & Loss</h2>
+        <button class="submit" onclick="loadReport()">Onyesha Report</button>
+
+        <p>Total Sales: <strong id="report-sales">TZS 0</strong></p>
+        <p>Total Expenses: <strong id="report-expenses">TZS 0</strong></p>
+        <p>Net Profit: <strong id="report-profit">TZS 0</strong></p>
       </div>
-    </div>
-
-    <!-- 8. REPORTS & BALANCE SHEET -->
-    <div id="reports" class="section-block">
-      <div class="form-container">
-        <h3>Financial Reports</h3>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; margin-bottom: 20px;">
-          <button class="btn btn-green" onclick="generateBalanceSheet()">Show Balance Sheet</button>
-          <button class="btn" onclick="generatePnL()">Show Profit & Loss</button>
-        </div>
-
-        <!-- PROFIT & LOSS -->
-        <div id="pnl-container" style="display: none; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px;">
-          <h4 style="color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 5px;">Profit & Loss Report</h4>
-          <table style="width:100%; margin-top:10px;">
-            <tr><td>Total Sales</td><td id="pnl-sales">TZS 0</td></tr>
-            <tr><td>Total Expenses</td><td id="pnl-expenses">TZS 0</td></tr>
-            <tr style="font-weight: bold; background: #e0f2fe;"><td>Net Profit</td><td id="pnl-net">TZS 0</td></tr>
-          </table>
-        </div>
-
-        <!-- BALANCE SHEET -->
-        <div id="balance-sheet-container" style="display: none; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #cbd5e1;">
-          <h2 style="text-align: center; color: #0f172a;">BALANCE SHEET</h2>
-          <p style="text-align: center; color: #64748b; margin-bottom: 20px; font-size: 13px;">Financial Position as of Today</p>
-
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-            <div style="background: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-              <h4 style="color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 5px;">1. ASSETS (Rasilimali)</h4>
-              <table style="width:100%; margin-top:10px;">
-                <tr><td>Cash on Hand</td><td id="bs-cash">TZS 0</td></tr>
-                <tr><td>Inventory Value (Stoo)</td><td id="bs-inventory">TZS 0</td></tr>
-                <tr><td>Accounts Receivable (Wateja)</td><td id="bs-receivables">TZS 0</td></tr>
-                <tr style="font-weight: bold; background: #e0f2fe;"><td>TOTAL ASSETS</td><td id="bs-total-assets">TZS 0</td></tr>
-              </table>
-            </div>
-
-            <div style="background: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-              <h4 style="color: #ef4444; border-bottom: 2px solid #ef4444; padding-bottom: 5px;">2. LIABILITIES (Madeni)</h4>
-              <table style="width:100%; margin-top:10px;">
-                <tr><td>Accounts Payable (Wauzaji)</td><td id="bs-payables">TZS 0</td></tr>
-                <tr style="font-weight: bold; background: #fee2e2;"><td>TOTAL LIABILITIES</td><td id="bs-total-liabilities">TZS 0</td></tr>
-              </table>
-
-              <h4 style="color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 5px; margin-top: 20px;">3. EQUITY / CAPITAL (Mtaji & Faida)</h4>
-              <table style="width:100%; margin-top:10px;">
-                <tr><td>Initial Capital (Mtaji Wa Awali)</td><td id="bs-capital">TZS 0</td></tr>
-                <tr><td>Retained Earnings (Faida)</td><td id="bs-retained">TZS 0</td></tr>
-                <tr style="font-weight: bold; background: #d1fae5;"><td>TOTAL EQUITY & LIABILITIES</td><td id="bs-total-equity">TZS 0</td></tr>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 9. MULTI-USER ACCESS -->
-    <div id="users" class="section-block">
-      <div class="form-container">
-        <h3>Switch Role / User Management</h3>
-        <div class="form-group" style="max-width: 300px;">
-          <label>Select Role</label>
-          <select id="role-select" onchange="changeRole(this.value)">
-            <option value="Owner">Owner</option>
-            <option value="Accountant">Accountant</option>
-            <option value="Salesperson">Salesperson</option>
-            <option value="Storekeeper">Storekeeper</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- 10. BACKUP -->
-    <div id="backup" class="section-block">
-      <div class="form-container">
-        <h3>Automatic & Manual Cloud Backup</h3>
-        <button onclick="downloadBackup()" class="btn"><i class="bi bi-download"></i> Download Backup </button>
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
-        <div class="form-group" style="max-width: 300px;">
-          <label>Restore Backup File</label>
-          <input type="file" id="backup-file" accept=".json">
-        </div>
-        <button onclick="restoreBackup()" class="btn btn-red" style="margin-top: 10px;"><i class="bi bi-upload"></i> Restore Data</button>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- PRINTABLE RECEIPT -->
-  <div id="printableReceipt" style="display:none; padding: 20px; font-family: monospace;">
-    <h3 style="text-align:center;">WIGGLE ACCOUNTING</h3>
-    <p style="text-align:center;">Official Sales Receipt</p>
-    <hr>
-    <p><strong>Item Name:</strong> <span id="rec-item"></span></p>
-    <p><strong>Quantity:</strong> <span id="rec-qty"></span></p>
-    <p><strong>Price per unit:</strong> TZS <span id="rec-price"></span></p>
-    <p><strong>Total Amount:</strong> TZS <span id="rec-total"></span></p>
-    <p><strong>Customer:</strong> <span id="rec-customer"></span></p>
-    <p><strong>Status:</strong> <span id="rec-status"></span></p>
-    <hr>
-    <p style="text-align:center;">Asante kwa kufanya biashara nasi!</p>
-  </div>
+    </section>
+  </main>
 
   <script>
-    function showSection(sectionId, e) {
-      document.querySelectorAll('.section-block').forEach(sec => sec.classList.remove('active'));
-      document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-      document.getElementById(sectionId).classList.add('active');
-      if(e && e.currentTarget) {
-        e.currentTarget.classList.add('active');
-        document.getElementById('page-title').innerText = e.currentTarget.querySelector('span').innerText;
+    const money = value =>
+      "TZS " + Number(value || 0).toLocaleString();
+
+    const $ = id => document.getElementById(id);
+
+    async function request(url, options = {}) {
+      const response = await fetch(url, options);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Request imefeli");
       }
-      if(sectionId === 'dashboard') loadDashboard();
-      if(sectionId === 'sales') loadSales();
-      if(sectionId === 'customers') loadCustomers();
-      if(sectionId === 'suppliers') loadSuppliers();
-      if(sectionId === 'inventory') loadProducts();
-      if(sectionId === 'reports') generateBalanceSheet();
+
+      return data;
     }
 
-    function toggleCustomCategory(val) {
-      document.getElementById('custom-cat-group').style.display = (val === 'Others') ? 'flex' : 'none';
-    }
+    function showSection(sectionId, button) {
+      document.querySelectorAll(".section").forEach(section => {
+        section.classList.remove("active");
+      });
 
-    function changeRole(role) {
-      document.getElementById('current-role').innerText = `Role: ${role}`;
-      alert(`Role changed to ${role}`);
-    }
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.classList.remove("active");
+      });
 
-    async function downloadBackup() {
-      try {
-        const [salesRes, expRes, prodRes] = await Promise.all([
-          fetch('/api/sales'),
-          fetch('/api/expenses'),
-          fetch('/api/products')
-        ]);
-        const backupData = { sales: await salesRes.json(), expenses: await expRes.json(), products: await prodRes.json() };
-        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `wiggle_backup_${new Date().toISOString().slice(0, 10)}.json`;
-        a.click();
-      } catch (err) { alert('Error downloading backup: ' + err.message); }
-    }
+      $(sectionId).classList.add("active");
 
-    function restoreBackup() {
-      const file = document.getElementById('backup-file').files[0];
-      if (!file) return alert('Tafadhali chagua faili kwanza!');
-      alert('Backup file loaded successfully!');
-    }
-
-    // CUSTOMERS
-    async function loadCustomers() {
-      try {
-        const res = await fetch('/api/customers');
-        const data = await res.json();
-        const tbody = document.getElementById('customers-table-body');
-        tbody.innerHTML = '';
-        if(Array.isArray(data) && data.length > 0) {
-          data.forEach(c => {
-            tbody.innerHTML += `<tr><td>${c.id}</td><td>${c.name}</td><td style="color:red; font-weight:bold;">TZS ${Number(c.outstanding_balance).toLocaleString()}</td></tr>`;
-          });
-        } else {
-          tbody.innerHTML = '<tr><td colspan="3">Hakuna wateja.</td></tr>';
-        }
-      } catch (err) { console.error(err); }
-    }
-
-    document.getElementById('customer-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('cust_add_name').value.trim();
-      const balance = document.getElementById('cust_add_balance').value;
-
-      try {
-        const res = await fetch('/api/customers', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ name, outstanding_balance: balance })
-        });
-        if(res.ok) { 
-          document.getElementById('customer-form').reset(); 
-          await loadCustomers(); 
-          alert('Mteja amehifadhiwa kikamilifu!');
-        } else {
-          const errData = await res.json();
-          alert('Kosa: ' + (errData.error || 'Imeshindwa kuhifadhi'));
-        }
-      } catch (err) {
-        alert('Kosa la mtandao: ' + err.message);
+      if (button) {
+        button.classList.add("active");
+        $("title").textContent = button.textContent.trim();
       }
+
+      if (sectionId === "dashboard") loadDashboard();
+      if (sectionId === "sales") loadSales();
+      if (sectionId === "inventory") loadProducts();
+      if (sectionId === "customers") loadCustomers();
+      if (sectionId === "suppliers") loadSuppliers();
+      if (sectionId === "reports") loadReport();
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        showSection(button.dataset.section, button);
+      });
     });
 
-    // SUPPLIERS
-    async function loadSuppliers() {
+    async function loadDashboard() {
       try {
-        const res = await fetch('/api/suppliers');
-        const data = await res.json();
-        const tbody = document.getElementById('suppliers-table-body');
-        tbody.innerHTML = '';
-        if(Array.isArray(data) && data.length > 0) {
-          data.forEach(s => {
-            tbody.innerHTML += `<tr><td>${s.id}</td><td>${s.name}</td><td style="font-weight:bold;">TZS ${Number(s.balance_due).toLocaleString()}</td></tr>`;
-          });
-        } else {
-          tbody.innerHTML = '<tr><td colspan="3">Hakuna wauzaji.</td></tr>';
-        }
-      } catch (err) { console.error(err); }
+        const data = await request("/api/dashboard");
+
+        $("dash-sales").textContent = money(data.sales);
+        $("dash-expenses").textContent = money(data.expenses);
+        $("dash-profit").textContent = money(data.profit);
+      } catch (err) {
+        console.error(err);
+      }
     }
 
-    document.getElementById('supplier-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('supp_add_name').value.trim();
-      const balance = document.getElementById('supp_add_balance').value;
-
-      try {
-        const res = await fetch('/api/suppliers', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ name, balance_due: balance })
-        });
-        if(res.ok) { 
-          document.getElementById('supplier-form').reset(); 
-          await loadSuppliers(); 
-          alert('Muuzaji amehifadhiwa kikamilifu!');
-        } else {
-          const errData = await res.json();
-          alert('Kosa: ' + (errData.error || 'Imeshindwa kuhifadhi'));
-        }
-      } catch (err) {
-        alert('Kosa la mtandao: ' + err.message);
-      }
-    });
-
-    // SALES
     async function loadSales() {
       try {
-        const res = await fetch('/api/sales');
-        const sales = await res.json();
-        const tbody = document.getElementById('sales-table-body');
-        tbody.innerHTML = '';
-        if(Array.isArray(sales) && sales.length > 0) {
-          sales.forEach(s => {
-            tbody.innerHTML += `
-              <tr>
-                <td>${s.item_name || 'Bidhaa'}</td>
-                <td>${s.quantity || 1}</td>
-                <td>TZS ${Number(s.unit_price || 0).toLocaleString()}</td>
-                <td>${s.customer_name || 'Mteja wa Kawaida'}</td>
-                <td><span style="color: ${s.payment_status === 'Credit' ? 'red' : 'green'}; font-weight: bold;">${s.payment_status || 'Paid'}</span></td>
-                <td><strong>TZS ${Number(s.total_amount || 0).toLocaleString()}</strong></td>
-                <td><button class="btn btn-red" style="margin:0; padding:4px 8px;" onclick="deleteSale(${s.id})">Futa</button></td>
-              </tr>`;
-          });
-        } else {
-          tbody.innerHTML = '<tr><td colspan="7">Hakuna mauzo yaliyorekodiwa.</td></tr>';
+        const sales = await request("/api/sales");
+        $("sales-body").innerHTML = "";
+
+        if (!sales.length) {
+          $("sales-body").innerHTML =
+            "<tr><td colspan='7'>Hakuna sales.</td></tr>";
+          return;
         }
-      } catch (err) { console.error(err); }
+
+        sales.forEach(sale => {
+          $("sales-body").innerHTML += `
+            <tr>
+              <td>${sale.item_name}</td>
+              <td>${sale.quantity}</td>
+              <td>${money(sale.unit_price)}</td>
+              <td>${sale.customer_name || "Mteja wa kawaida"}</td>
+              <td>${sale.payment_status}</td>
+              <td>${money(sale.total_amount)}</td>
+              <td>
+                <button class="submit danger"
+                  onclick="deleteSale(${sale.id})">
+                  Futa
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        alert(err.message);
+      }
     }
 
-    document.getElementById('sales-form').addEventListener('submit', async (e) => {
+    $("sales-form").addEventListener("submit", async e => {
       e.preventDefault();
-      const item = document.getElementById('item_name').value;
-      const qty = document.getElementById('quantity').value;
-      const price = document.getElementById('unit_price').value;
-      const cust = document.getElementById('cust_name').value || 'Mteja wa Kawaida';
-      const status = document.getElementById('payment_status').value;
-
-      const body = { 
-        item_name: item, 
-        quantity: qty, 
-        unit_price: price, 
-        customer_name: cust, 
-        payment_status: status 
-      };
 
       try {
-        const res = await fetch('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        
-        if(res.ok) {
-          await loadSales();
-          await loadCustomers();
-          await loadDashboard();
+        await request("/api/sales", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            item_name: $("item_name").value,
+            quantity: $("quantity").value,
+            unit_price: $("unit_price").value,
+            customer_name: $("customer_name").value,
+            payment_status: $("payment_status").value
+          })
+        });
 
-          document.getElementById('rec-item').innerText = item;
-          document.getElementById('rec-qty').innerText = qty;
-          document.getElementById('rec-price').innerText = Number(price).toLocaleString();
-          document.getElementById('rec-total').innerText = (Number(qty) * Number(price)).toLocaleString();
-          document.getElementById('rec-customer').innerText = cust;
-          document.getElementById('rec-status').innerText = status;
-          
-          setTimeout(() => {
-            window.print();
-            document.getElementById('sales-form').reset();
-          }, 300);
-        }
+        e.target.reset();
+        alert("Sale imehifadhiwa");
+        loadSales();
+        loadCustomers();
+        loadDashboard();
       } catch (err) {
-        alert('Imeshindwa kuhifadhi mauzo: ' + err.message);
+        alert(err.message);
       }
     });
 
     async function deleteSale(id) {
-      try {
-        const res = await fetch(`/api/sales/${id}`, { method: 'DELETE' });
-        if(res.ok) { loadSales(); loadDashboard(); }
-      } catch (err) { alert('Imeshindwa kufuta mauzo.'); }
-    }
-
-    // EXPENSES
-    document.getElementById('expenses-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      let cat = document.getElementById('exp_category').value;
-      if (cat === 'Others') cat = document.getElementById('exp_custom_category').value || 'Others';
-
-      const body = {
-        category: cat,
-        amount: document.getElementById('exp_amount').value,
-        paid_from: document.getElementById('exp_paid_from').value,
-        notes: document.getElementById('exp_notes').value
-      };
-      try {
-        const res = await fetch('/api/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        if(res.ok) { alert('Matumizi yamerekodiwa!'); document.getElementById('expenses-form').reset(); loadDashboard(); }
-      } catch (err) { alert('Kosa la mtandao'); }
-    });
-
-    // INVENTORY
-    async function loadProducts() {
-      try {
-        const products = await fetch('/api/products').then(r=>r.json()).catch(()=>[]);
-        const tbody = document.getElementById('products-table-body');
-        const select = document.getElementById('purchase_prod_id');
-        tbody.innerHTML = '';
-        select.innerHTML = '';
-
-        if (Array.isArray(products) && products.length > 0) {
-          products.forEach(p => {
-            tbody.innerHTML += `
-              <tr>
-                <td>${p.id}</td>
-                <td>${p.name}</td>
-                <td><strong>${p.quantity}</strong></td>
-                <td>TZS ${Number(p.unit_price).toLocaleString()}</td>
-                <td><button class="btn" style="margin:0; padding:4px 8px;" onclick="editProduct(${p.id}, ${p.quantity}, ${p.unit_price})">Edit</button></td>
-              </tr>`;
-            select.innerHTML += `<option value="${p.id}">${p.name} (Iliyopo: ${p.quantity})</option>`;
-          });
-        } else {
-          tbody.innerHTML = '<tr><td colspan="5">Hakuna bidhaa stoo.</td></tr>';
-        }
-      } catch (err) { console.error(err); }
-    }
-
-    document.getElementById('product-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const body = {
-        name: document.getElementById('prod_name').value,
-        quantity: document.getElementById('prod_qty').value,
-        unit_price: document.getElementById('prod_price').value,
-        min_stock_alert: document.getElementById('prod_alert').value
-      };
-      try {
-        const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        if(res.ok) { document.getElementById('product-form').reset(); loadProducts(); }
-      } catch(err) { console.error(err); }
-    });
-
-    document.getElementById('purchase-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const id = document.getElementById('purchase_prod_id').value;
-      const qty = document.getElementById('purchase_qty').value;
-      const cost = document.getElementById('purchase_cost').value;
-      const supplier = document.getElementById('purchase_supplier').value;
+      if (!confirm("Unataka kufuta sale hii?")) return;
 
       try {
-        const res = await fetch(`/api/products/${id}/purchase`, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ quantity: qty, unit_cost: cost, supplier_name: supplier }) 
-        });
-        if(res.ok) { 
-          document.getElementById('purchase-form').reset(); 
-          await loadProducts(); 
-          await loadSuppliers(); 
-          alert('Mzigo umeongezwa kikamilifu!');
-        }
-      } catch (err) { alert('Kosa la mtandao'); }
-    });
-
-    async function editProduct(id, oldQty, oldPrice) {
-      const newQty = prompt("Idadi Mpya ya Stock:", oldQty);
-      const newPrice = prompt("Bei Mpya ya Kuuzia:", oldPrice);
-      if(newQty !== null && newPrice !== null) {
-        await fetch(`/api/products/${id}`, {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ quantity: newQty, unit_price: newPrice })
-        });
-        loadProducts();
+        await request("/api/sales/" + id, { method: "DELETE" });
+        loadSales();
+        loadCustomers();
+        loadDashboard();
+      } catch (err) {
+        alert(err.message);
       }
     }
 
-    // REPORTS & BALANCE SHEET
-    async function generatePnL() {
+    $("expense-form").addEventListener("submit", async e => {
+      e.preventDefault();
+
       try {
-        const res = await fetch('/api/reports/profit-loss');
-        const data = await res.json();
-        document.getElementById('pnl-container').style.display = 'block';
-        document.getElementById('pnl-sales').innerText = `TZS ${Number(data.totalSales).toLocaleString()}`;
-        document.getElementById('pnl-expenses').innerText = `TZS ${Number(data.totalExpenses).toLocaleString()}`;
-        document.getElementById('pnl-net').innerText = `TZS ${Number(data.netProfit).toLocaleString()}`;
-      } catch (err) { alert('Kosa kwenye P&L: ' + err.message); }
+        await request("/api/expenses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            category: $("expense-category").value,
+            amount: $("expense-amount").value,
+            paid_from: $("expense-paid").value,
+            notes: $("expense-notes").value
+          })
+        });
+
+        e.target.reset();
+        alert("Expense imehifadhiwa");
+        loadDashboard();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    async function loadProducts() {
+      try {
+        const products = await request("/api/products");
+
+        $("products-body").innerHTML = "";
+        $("purchase-product").innerHTML = "";
+
+        if (!products.length) {
+          $("products-body").innerHTML =
+            "<tr><td colspan='4'>Hakuna bidhaa.</td></tr>";
+          return;
+        }
+
+        products.forEach(product => {
+          $("products-body").innerHTML += `
+            <tr>
+              <td>${product.id}</td>
+              <td>${product.name}</td>
+              <td>${product.quantity}</td>
+              <td>${money(product.unit_price)}</td>
+            </tr>
+          `;
+
+          $("purchase-product").innerHTML += `
+            <option value="${product.id}">
+              ${product.name} - Stock: ${product.quantity}
+            </option>
+          `;
+        });
+      } catch (err) {
+        alert(err.message);
+      }
     }
 
-    async function generateBalanceSheet() {
+    $("product-form").addEventListener("submit", async e => {
+      e.preventDefault();
+
       try {
-        const [p, s, e, c, sup] = await Promise.all([
-          fetch('/api/products').then(r=>r.json()).catch(()=>[]),
-          fetch('/api/sales').then(r=>r.json()).catch(()=>[]),
-          fetch('/api/expenses').then(r=>r.json()).catch(()=>[]),
-          fetch('/api/customers').then(r=>r.json()).catch(()=>[]),
-          fetch('/api/suppliers').then(r=>r.json()).catch(()=>[])
-        ]);
+        await request("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: $("product-name").value,
+            quantity: $("product-quantity").value,
+            unit_price: $("product-price").value,
+            min_stock_alert: 5
+          })
+        });
 
-        const invVal = Array.isArray(p) ? p.reduce((a,b)=>a+(Number(b.quantity)*Number(b.unit_price)), 0) : 0;
-        const salesVal = Array.isArray(s) ? s.reduce((a,b)=>a+Number(b.total_amount || 0), 0) : 0;
-        const expVal = Array.isArray(e) ? e.reduce((a,b)=>a+Number(b.amount||0), 0) : 0;
-        const custVal = Array.isArray(c) ? c.reduce((a,b)=>a+Number(b.outstanding_balance||0), 0) : 0;
-        const suppVal = Array.isArray(sup) ? sup.reduce((a,b)=>a+Number(b.balance_due||0), 0) : 0;
+        e.target.reset();
+        alert("Bidhaa imeongezwa");
+        loadProducts();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
 
-        const netCash = salesVal - expVal;
-        const totalAssets = netCash + invVal + custVal;
-        const retained = salesVal - expVal;
-        const initialCapital = totalAssets - retained - suppVal;
+    $("purchase-form").addEventListener("submit", async e => {
+      e.preventDefault();
 
-        document.getElementById('balance-sheet-container').style.display = 'block';
-        document.getElementById('bs-cash').innerText = `TZS ${netCash.toLocaleString()}`;
-        document.getElementById('bs-inventory').innerText = `TZS ${invVal.toLocaleString()}`;
-        document.getElementById('bs-receivables').innerText = `TZS ${custVal.toLocaleString()}`;
-        document.getElementById('bs-total-assets').innerText = `TZS ${totalAssets.toLocaleString()}`;
+      try {
+        await request(
+          "/api/products/" + $("purchase-product").value + "/purchase",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              quantity: $("purchase-quantity").value,
+              unit_cost: $("purchase-cost").value,
+              supplier_name: $("purchase-supplier").value
+            })
+          }
+        );
 
-        document.getElementById('bs-payables').innerText = `TZS ${suppVal.toLocaleString()}`;
-        document.getElementById('bs-total-liabilities').innerText = `TZS ${suppVal.toLocaleString()}`;
+        e.target.reset();
+        alert("Purchase imehifadhiwa na supplier ameongezwa");
+        loadProducts();
+        loadSuppliers();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
 
-        document.getElementById('bs-capital').innerText = `TZS ${initialCapital > 0 ? initialCapital.toLocaleString() : '0'}`;
-        document.getElementById('bs-retained').innerText = `TZS ${retained.toLocaleString()}`;
-        document.getElementById('bs-total-equity').innerText = `TZS ${(retained + (initialCapital > 0 ? initialCapital : 0) + suppVal).toLocaleString()}`;
-      } catch (err) { console.error(err); }
+    async function loadCustomers() {
+      try {
+        const customers = await request("/api/customers");
+        $("customers-body").innerHTML = "";
+
+        if (!customers.length) {
+          $("customers-body").innerHTML =
+            "<tr><td colspan='4'>Hakuna customers.</td></tr>";
+          return;
+        }
+
+        customers.forEach(customer => {
+          $("customers-body").innerHTML += `
+            <tr>
+              <td>${customer.id}</td>
+              <td>${customer.name}</td>
+              <td>${money(customer.total_credit_sales)}</td>
+              <td>${money(customer.outstanding_balance)}</td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        alert(err.message);
+      }
     }
 
-    async function loadDashboard() {
+    $("customer-form").addEventListener("submit", async e => {
+      e.preventDefault();
+
       try {
-        const [s, e] = await Promise.all([
-          fetch('/api/sales').then(r=>r.json()).catch(()=>[]), 
-          fetch('/api/expenses').then(r=>r.json()).catch(()=>[])
-        ]);
-        let totS = Array.isArray(s) ? s.reduce((a,b)=>a+Number(b.total_amount || 0), 0) : 0;
-        let totE = Array.isArray(e) ? e.reduce((a,b)=>a+Number(b.amount||0), 0) : 0;
-        document.getElementById('dash-sales').innerText = `TZS ${totS.toLocaleString()}`;
-        document.getElementById('dash-expenses').innerText = `TZS ${totE.toLocaleString()}`;
-        document.getElementById('dash-profit').innerText = `TZS ${(totS - totE).toLocaleString()}`;
-      } catch (err) { console.error(err); }
+        await request("/api/customers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: $("new-customer").value,
+            outstanding_balance: $("customer-balance").value
+          })
+        });
+
+        e.target.reset();
+        alert("Customer amehifadhiwa");
+        loadCustomers();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    async function loadSuppliers() {
+      try {
+        const suppliers = await request("/api/suppliers");
+        $("suppliers-body").innerHTML = "";
+
+        if (!suppliers.length) {
+          $("suppliers-body").innerHTML =
+            "<tr><td colspan='4'>Hakuna suppliers.</td></tr>";
+          return;
+        }
+
+        suppliers.forEach(supplier => {
+          $("suppliers-body").innerHTML += `
+            <tr>
+              <td>${supplier.id}</td>
+              <td>${supplier.name}</td>
+              <td>${money(supplier.total_purchases)}</td>
+              <td>${money(supplier.balance_due)}</td>
+            </tr>
+          `;
+        });
+      } catch (err) {
+        alert(err.message);
+      }
     }
 
-    // Load initial state
+    $("supplier-form").addEventListener("submit", async e => {
+      e.preventDefault();
+
+      try {
+        await request("/api/suppliers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: $("new-supplier").value,
+            balance_due: $("supplier-balance").value
+          })
+        });
+
+        e.target.reset();
+        alert("Supplier amehifadhiwa");
+        loadSuppliers();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    async function loadReport() {
+      try {
+        const report = await request("/api/reports/profit-loss");
+
+        $("report-sales").textContent = money(report.totalSales);
+        $("report-expenses").textContent = money(report.totalExpenses);
+        $("report-profit").textContent = money(report.netProfit);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
     loadDashboard();
   </script>
 </body>
