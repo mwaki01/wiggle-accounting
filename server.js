@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -7,11 +8,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Data za Mfumo
-let inventory = [
-  { id: 1, name: 'Soda (Chupa)', quantity: 100, unit_price: 1000 }
-];
+// 1. Ruhusu Server kuhudumia mafaili ya Frontend (HTML/JS/CSS)
+app.use(express.static(__dirname));
 
+// Data za Mfumo (Mock Data / Database Storage)
 let sales = [];
 
 let customers = [
@@ -24,13 +24,14 @@ let suppliers = [
   { id: 2, name: 'Coca Cola Supplies', balance_due: 80000 }
 ];
 
-// --- ROUTES ---
+// --- ROUTES NA API ENDPOINTS ---
 
+// Root Endpoint - Inarudisha Ukurasa wa Mfumo (Dashboard) badala ya maandishi
 app.get('/', (req, res) => {
-  res.send('Wiggle Accounting Backend API is Running Successfully!');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// 1. Customers API
+// 1. API ya Wateja (Customers)
 app.get('/api/customers', (req, res) => {
   try {
     res.status(200).json(customers);
@@ -39,7 +40,7 @@ app.get('/api/customers', (req, res) => {
   }
 });
 
-// 2. Suppliers API
+// 2. API ya Wauzaji (Suppliers)
 app.get('/api/suppliers', (req, res) => {
   try {
     res.status(200).json(suppliers);
@@ -48,7 +49,7 @@ app.get('/api/suppliers', (req, res) => {
   }
 });
 
-// 3. Sales API (Ina Idadi ya Chupa & Delete)
+// 3. API ya Mauzo (Sales - Inajumuisha Idadi ya Chupa & Kufuta)
 app.get('/api/sales', (req, res) => {
   res.status(200).json(sales);
 });
@@ -56,12 +57,12 @@ app.get('/api/sales', (req, res) => {
 app.post('/api/sales', (req, res) => {
   const { item_name, quantity, unit_price } = req.body;
   if (!quantity || !unit_price) {
-    return res.status(400).json({ error: "Ingiza idadi na bei ya kila chupa/bidhaa." });
+    return res.status(400).json({ error: "Ingiza idadi ya chupa na bei kwa kila chupa." });
   }
 
   const newSale = {
     id: Date.now(),
-    item_name: item_name || 'Bidhaa Isiyojulikana',
+    item_name: item_name || 'Bidhaa',
     quantity: Number(quantity),
     unit_price: Number(unit_price),
     total: Number(quantity) * Number(unit_price),
@@ -78,11 +79,11 @@ app.delete('/api/sales/:id', (req, res) => {
   res.status(200).json({ message: "Mauzo yamefutwa" });
 });
 
-// 4. Profit & Loss Report API (Haikwami)
+// 4. API ya Profit & Loss (Haikwami - Response ya Haraka)
 app.get('/api/reports/profit-loss', (req, res) => {
   try {
     const totalSales = sales.reduce((sum, s) => sum + s.total, 0);
-    const totalExpenses = 50000;
+    const totalExpenses = 50000; // Matumizi
     const netProfit = totalSales - totalExpenses;
 
     res.status(200).json({
@@ -96,5 +97,6 @@ app.get('/api/reports/profit-loss', (req, res) => {
   }
 });
 
+// Kuwasha Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
